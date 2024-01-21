@@ -4,7 +4,7 @@ import os
 
 
 mbp = False
-debug = True
+debug = False
 textfile = False
 
 
@@ -98,7 +98,7 @@ else:
         ch.setLevel(logging.INFO)
 
     formatter = logging.Formatter("%(asctime)s - %(levelname)s: %(message)s")
-    ch.addFilter(nottempfilter())
+#    ch.addFilter(nottempfilter())
     ch.addFilter(notsyncfilter())
     ch.setFormatter(formatter)
     log.addHandler(ch)
@@ -109,5 +109,6 @@ log.warning("(warning) using loggersetup.py")
 log.debug("(debug) using loggersetup.py")
 log.error("(error) using loggersetup.py")
 #logmqtt.info("(info) using loggersetup.py")
+
 
 
