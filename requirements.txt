@@ -1,6 +1,4 @@
-wheel
-pyyaml
 requests
 paho-mqtt
-graypy
+
 

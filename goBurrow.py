@@ -1,4 +1,4 @@
-import Burrow, sched
+import Burrow, schedule
 import MQTTlistener
 import houseMQTT
 from libraries import loggerdo, utils
@@ -96,7 +96,7 @@ def main(importedconfig):
 
     ourhome = houseMQTT.home(config, ealert)
 
-    dayschedule = sched.day(config)
+    dayschedule = schedule.day(config)
 
     burrow = Burrow.Burrow(ourhome, dayschedule, config, ealert)
 
