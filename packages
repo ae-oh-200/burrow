@@ -1,0 +1,5 @@
+apt install
+
+libtiff5
+libatlas-base-dev
+libopenjp2-7
