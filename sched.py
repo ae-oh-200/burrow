@@ -336,3 +336,4 @@ class day:
 	def getlastupdate(self):
 		return self.lastupdate
 
+
