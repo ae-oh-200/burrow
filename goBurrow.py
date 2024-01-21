@@ -20,38 +20,12 @@ def run():
         burrow.eval()
         time.sleep(3)
 
-def controlchanges():
-    while True:
-        #schedule.run_pending()
-        controla = controller.mailerpoll()
-        if controller.update == True:
-            if controller.actoggle == True:
-                loggerdo.log.debug("turn ac on")
-                if burrow.getwemostatus() == "off":
-                    burrow.acon(force=True)
-                    burrow.starttimer(60)
-            elif controller.actoggle == False:
-                loggerdo.log.debug("turn ac off")
-                if burrow.getwemostatus() == "on":
-                    burrow.acoff(force=True)
-                    burrow.starttimer(60)
 
-            elif controller.tempchangedirection != None:
-                if controller.tempchangedirection == True:
-                    loggerdo.log.info("increment temp")
-                    updateschedule(True)
+def runmqttlistenbroker():
+    mqttlistener.run()
 
-                elif controller.tempchangedirection == False:
-                    loggerdo.log.info("decrement temp")
-                    updateschedule(False)
-
-            controller.updateoff()
-
-        time.sleep(5)
-
-def runmqttbroker():
-    mqtt.run()
-
+def runmqttthermometerbroker():
+    mqttthermometer.run()
 
 def makebase64(file):
     with open(file, 'rb') as binary_file:
@@ -110,7 +84,7 @@ def runmeross(switches, mqttserver):
 
 def main(importedconfig):
     global config, test
-    global ourhome, dayschedule, burrow, controller, mqtt
+    global ourhome, dayschedule, burrow, mqttlistener, mqttthermometer
 
     config = importedconfig
 
@@ -126,18 +100,22 @@ def main(importedconfig):
 
     burrow = Burrow.Burrow(ourhome, dayschedule, config, ealert)
 
-    # controller = control.controller(ourhome, dayschedule, burrow, config)
-    #mqtt = MQTTlistener.broker(mqttconfig=config["MQTT"], house=ourhome, burrow=burrow, schedule=dayschedule, heatbump=config["heatbump"], acdrop=config["acdrop"])
-
-    mqtt = MQTTlistener.broker(mqttconfig=config["MQTT"], house=ourhome, burrow=burrow, schedule=dayschedule,
+  
+    mqttlistener = MQTTlistener.broker(mqttconfig=config["MQTT"], house=ourhome, burrow=burrow, schedule=dayschedule,
                                config=config)
+    
+    mqttthermometer = MQTTlistener.broker(mqttconfig=config["MQTT"], house=ourhome)
     #controlthread = threading.Thread(target=controlchanges)
     #controlthread.setDaemon(True)
     #controlthread.start()
 
-    mqttthread = threading.Thread(target=runmqttbroker)
-    mqttthread.setDaemon(True)
-    mqttthread.start()
+    mqttlistenthread = threading.Thread(target=runmqttlistenbroker)
+    mqttlistenthread.setDaemon(True)
+    mqttlistenthread.start()
+
+    mqttthermometerthread = threading.Thread(target=runmqttthermometerbroker)
+    mqttthermometerthread.setDaemon(True)
+    mqttthermometerthread.start()
 
     run()
 
