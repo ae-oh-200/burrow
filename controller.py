@@ -6,28 +6,15 @@ import HVACtalker
 import time
 
 class Burrow:
-
-    manualtimer = None
-
-    heatertimer = None
-
     ourhome = None
     schedule = None
     anyonehome = None
     mqtttalker = None
 
     state = True
-    statelasteupdate = None
-    statetimer = None
-
     mode = None
 
-    heat = False
-    ac = False
-    fan = False
-
     heaterstate = False
-
     acstate = False
     fanstate = False
 
@@ -56,9 +43,6 @@ class Burrow:
         self.defaultFanRuntime = config['fans']['defaultFanRuntime']
 
 
-
-        self.statelasteupdate = (datetime.datetime.now() - datetime.timedelta(seconds=5))
-        
 
         self.coolStateLastChange = datetime.datetime.now()
         self.heatStateLastChange = datetime.datetime.now()
@@ -229,7 +213,7 @@ class Burrow:
         # self.schedule.changemode('away', True)
         # self.schedule.disableoveride()
         self.homeAwayOverride = True
-        
+
     def quickheaterchange(self, state):
         loggerdo.log.info(f"burrow - quickheaterchange - trying to set heat to  {state}")
         if state:

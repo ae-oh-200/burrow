@@ -62,13 +62,11 @@ def main(importedconfig):
 
     myclient = None
 
-    ealert = alerts.prevere(config)
-
     ourhome = house.home(config)
 
     dayschedule = schedule.day(config)
 
-    burrow = Burrow.Burrow(ourhome, dayschedule, config, ealert)
+    burrow = controller.Burrow(ourhome, dayschedule, config)
 
   
     mqttlistener = MQTTlistener.broker(house=ourhome, burrow=burrow, schedule=dayschedule,

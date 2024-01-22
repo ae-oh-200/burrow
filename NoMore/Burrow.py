@@ -51,7 +51,7 @@ class Burrow:
     moremodetime = None
     moretime = None
 
-    def __init__(self, home, schedule, config, alert):
+    def __init__(self, home, schedule, config):
         self.mydb = None
         self.ourhome = home
         self.schedule = schedule
