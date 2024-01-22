@@ -1,6 +1,6 @@
 import Burrow, schedule
 import MQTTlistener
-import houseMQTT
+import house
 from libraries import loggerdo, utils
 import datetime
 import time
@@ -13,6 +13,12 @@ import meross
 
 def run():
 
+    
+    while not ourhome.getinitialize():
+        loggerdo.log.info("goBurrow - sensors have not yet been initalized yet, starting")
+        ourhome.initializesensor()
+        
+    loggerdo.log.info("goBurrow - initializing sensors completed")                    
     while True:
         # update
         dayschedule.checkvalid()
@@ -34,41 +40,6 @@ def makebase64(file):
         base64_encoded_data = base64.b64encode(binary_file_data)
         base64_message = base64_encoded_data.decode('utf-8')
         return base64_message
-
-def updateschedule(direction):
-    now = datetime.datetime.now()
-    thishour = now.hour
-    tophour = thishour + 2
-
-    while thishour <= tophour:
-        if thishour > 23.5:
-            break
-        if direction:
-            dayschedule.increment(now)
-            if test:
-                loggerdo.log.info("checking schedule")
-
-                base, high, low = dayschedule.pullhourdetails(now)
-
-                loggerdo.log.info("Low = {} and High = {}".format(low, high))
-        else:
-            dayschedule.decrement(now)
-            if test:
-                loggerdo.log.info("checking schedule")
-                base, high, low = dayschedule.pullhourdetails(now)
-                loggerdo.log.info("Low = {} and High = {}".format(low, high))
-
-        now = now + datetime.timedelta(minutes=30)
-        thishour += 0.5
-
-
-def printhome():
-    ltempf, htempf = ourhome.getroomtemplimit()
-    print ("Low temp - {} High temp - {}".format(ltempf, htempf))
-    outtemplimitf = ourhome.getoutsidetemplimit()
-    print("Outside temp limit - {}".format(outtemplimitf))
-    nightstart, nightend = ourhome.getnightschedule()
-    print("Night start - {} Night end - {}".format(nightstart, nightend))
 
 def runmeross(switches, mqttserver):
     merossswitcharray = []
@@ -94,7 +65,7 @@ def main(importedconfig):
 
     ealert = alerts.prevere(config)
 
-    ourhome = houseMQTT.home(config, ealert)
+    ourhome = house.home(config)
 
     dayschedule = schedule.day(config)
 

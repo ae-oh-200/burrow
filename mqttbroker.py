@@ -204,35 +204,3 @@ class broker():
 
 	def run(self):
 		self.mqttc.loop_forever()
-
-# If you want to use a specific client id, use
-# mqttc = mqtt.Client("client-id")
-# but note that the client id must be unique on the broker. Leaving the client
-# id parameter empty will generate a random id for you.
-
-# Uncomment to enable debug messages
-# mqttc.on_log = on_log
-if __name__ == "__main__":
-	import houseMQTT
-	from libraries import loggerdo, utils
-	import pymongo
-
-	#Grab configfile
-	if path.exists("config.yaml"):
-		config = loadconfig('config.yaml')
-	else:
-		 config = loadconfig('/etc/burrow/config.yaml')
-
-
-
-	#setup db connection
-	myclient = pymongo.MongoClient("mongodb://{}:27017/".format(config["mongoip"]))
-	mydb = myclient["burrow"]
-
-	home = houseMQTT.home(mydb, config)
-
-	print("its starting")
-
-	mqsetup = broker(config["MQTT"], home)
-	mqsetup.run()
-

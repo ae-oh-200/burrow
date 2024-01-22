@@ -442,12 +442,10 @@ class Burrow:
 				# fan is running, check if we should shut fan off
 				self.checkfantimer()
 				# leave function
-				pass
+				return True
 			elif self.fantimer is True and self.fanstate is False:
 				loggerdo.log.debug("burrow - fanrunner - fan timer running but fan off?")
 				self.fantimer = False
-
-			# self.heatdelay
 
 			# check if AC has been off for 10+ mins
 			if (self.AClastOff + datetime.timedelta(minutes=self.acdelay) < datetime.datetime.now()) and \
@@ -543,14 +541,10 @@ class Burrow:
 				self.schedule.moremodebool = False
 
 	def eval(self):
-		self.ourhome.getsenseorhealth()
+		sensorhealth = self.ourhome.getsenseorhealth()
 		madechange = False
 		# Check to make sure we have at least a sensor
-		if not self.ourhome.getinitialize():
-			loggerdo.log.debug("burrow - sensors have not yet been initalized")
-			# Try and start things up
-			self.ourhome.initializesensor()
-			loggerdo.log.debug("burrow - initializing sensors completed")
+		
 
 		# Run away mode check
 		self.awaymode()

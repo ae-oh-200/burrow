@@ -26,20 +26,19 @@ class sensor:
 
 
 
-    def __init__(self, nickname, houseweight, zoneweight, topic, alerter, address, addresstype, zone, temperatureavail, humilityavail):
+    def __init__(self, nickname, houseweight, zoneweight, topic, address, debug, addresstype, zone, temperatureavail, humilityavail):
         self.zone = zone
         self.houseweight = houseweight
         self.zoneweight = zoneweight
         self.topic = topic
-        self.alertcount = 0
         self.nickname = nickname
-        self.alerter = alerter
         self.addrees = address
         self.addresstype = addresstype
         self.temperatureavail = temperatureavail
         self.humilityavail = humilityavail
         self.humidity = 0
         self.temp = 0
+        self.debug = debug
 
 
     def settemp(self, temp):
@@ -48,34 +47,29 @@ class sensor:
             self.lasttemp = self.temp
             self.temp = temp
             self.lasttempupdate = datetime.datetime.now()
-            #loggerdo.log.debug("housemqtt - sensor - setting {} temperature to {}, Time is = {}".format(self.topic, temp, time))
+            if self.debug:
+                loggerdo.log.info("housemqtt - sensor - setting {} temperature to {}, Time is = {}".format(self.topic, temp, time))
             return True
-        #else:
-            #loggerdo.log.debug('housemqtt - sensor -  - not setting temp for {} because its out of range, current: {} new: {}'.format(self.topic, self.temp, temp))
+        else:
+            if self.debug:
+                loggerdo.log.info('housemqtt - sensor - not setting temp for {} because its out of range, current: {} new: {}'.format(self.topic, self.temp, temp))
             return False
 
-    def sethumidity(self, humidity, time=datetime.datetime.now()):
-        #loggerdo.log.debug("housemqtt - sensor - Doing a set humidity inside {} for sensor {}".format(self.nickname, self.gettopic()))
+    def sethumidity(self, humidity):
+        if self.debug:
+            loggerdo.log.info("housemqtt - sensor - Doing a set humidity inside {} for sensor {}".format(self.nickname, self.gettopic()))
         self.lasthumidity = self.humidity
         self.humidity = humidity
-        self.lasthumidityupdate = time
+        self.lasthumidityupdate = datetime.datetime.now()
         return True
 
     def gettemp(self):
         if not self.lasttempupdate:
             return None
-        if self.lasttempupdate > datetime.datetime.now() - datetime.timedelta(minutes=15):
-            if self.alertcount >= 1200:
-                #loggerdo.log.debug("housemqtt - sensor - {} is cleared".format(self.nickname))
-                self.sendclearalert()
-            self.alertcount = 0
+        elif self.lasttempupdate > datetime.datetime.now() - datetime.timedelta(minutes=15):
             return self.temp
         else:
-            #loggerdo.log.info("housemqtt - sensor -  Data from {} is to old to use, last update was - {}".format(self.topic, self.lasttempupdate))
-            #loggerdo.log.debug("housemqtt - sensor - alertcount for {} = {}".format(self.nickname, self.alertcount))
-            if self.alertcount == 1200:
-                self.sendfailalert(atime=self.lasttempupdate)
-            self.alertcount += 1
+            loggerdo.log.info("housemqtt - sensor -  Data from {} is to old to use, last update was - {}".format(self.topic, self.lasttempupdate))
             return None
 
     def gethumidity(self):
@@ -99,53 +93,27 @@ class sensor:
     def getzoneweight(self):
         return self.zoneweight
 
-    def sendfailalert(self, atime):
-        #loggerdo.log.debug("housemqtt - sensor - sending alert for - {}".format(self.nickname))
-        subject = "{} threw an error".format(self.nickname)
-        message = "last update time was {}, and it is {}".format(atime, datetime.datetime.now())
-        self.alerter.shout(subject, message)
-
-    def sendclearalert(self):
-        #loggerdo.log.debug("housemqtt - sensor - sending clear for - {}".format(self.nickname))
-        subject = "{} is back online".format(self.nickname)
-        message = "system time is {}".format(datetime.datetime.now())
-        self.alerter.shout(subject, message)
 
 class home:
     outsidetemp = None
     houseavgtemp = None
     outsidetemplimit = None
-    family = None
-    pingfamily = None
-    test = None
 
-    thermlastupdate = None
+
     houseavgtempfail = 0
     initializecomplete = None
-    ealert = None
 
     #new
     burrowsensors = None
 
+    debug = None
 
 
-    def __init__(self, config, ealert):
+
+    def __init__(self, config):
         self.config = config
-        self.ealert = ealert
-        self.test = self.config["test"]
-
-        # setup outside temp
-        #self.outsidetemp = self.fetchoutsidetemp()
-        #self.outsidetemplimit = self.config["outtemplimitf"]
-        # setup family for occupied
-        #self.pingfamily = occupied.occupied(self.mydb, self.config["family"])
-
-        #self.themometers = self.setupthermometers(config["remotesensors"])
-
+        self.debug = config["debug"]["house"]
         self.burrowsensors = self.setupsensors(config['rooms'])
-
-        self.thermlastupdate = None
-
         self.initializecomplete = False
 
 
@@ -158,7 +126,7 @@ class home:
 
             sensorarray.append(sensor(nickname=rooms[sensors]['nickname'], zoneweight=rooms[sensors]['zoneweight'], houseweight=rooms[sensors]['houseweight'],
                                       topic=rooms[sensors]['topic'], address=rooms[sensors]['address'], addresstype= rooms[sensors]['address-type'],
-                                      alerter=self.ealert, zone=rooms[sensors]['zone'],
+                                      debug=self.debug, zone=rooms[sensors]['zone'],
                                       temperatureavail=rooms[sensors]['temperatureavail'], humilityavail=rooms[sensors]['temperatureavail']))
 
             houseweight = totalweight + rooms[sensors]['houseweight']
@@ -177,28 +145,26 @@ class home:
         foundtemp = False
 
         while not self.initializecomplete:
-            loggerdo.log.info("housemqtt - house - Trying to initialize sensors. Total senors = {}".format(len(self.burrowsensors)))
+            loggerdo.log.info("housemqtt - house - Trying to initialize sensors. Total sensors = {}".format(len(self.burrowsensors)))
             if runtotal > 30:
                 raise SystemExit("Failed to initialize sensors")
             for sensor in self.burrowsensors:
                 if sensor.gettemp() != None:
-                    loggerdo.log.info("housemqtt - house - Initialize is checking sensors {}".format(sensor.getnickname()))
+                    loggerdo.log.info("housemqtt - house - Initialize is complete, found temp with - {}".format(sensor.getnickname()))
                     self.initializecomplete = True
                     break
             runtotal += 1
             time.sleep(5)
 
-    def udatesensortemp(self,topic, ftemp):
+    def udatesensortemp(self, topic, ftemp):
         for themometer in self.burrowsensors:
             if themometer.gettopic() == topic:
                 # Becuase of the way posting data is written I must submit something for null values.
                 # Check to make sure submitted data is above 0
                 tret = themometer.settemp(ftemp)
-                #if tret:
-                    #loggerdo.log.debug("housemqtt - setting {} temp to {} was sucessful".format(themometer.gettopic(), ftemp))
-                #else:
-                    #loggerdo.log.debug(
-                     #   "housemqtt - setting {} temp to {} was NOT sucessful".format(themometer.gettopic(), ftemp))
+                if not tret:
+                    loggerdo.log.debug(
+                        "housemqtt - setting {} temp to {} was NOT sucessful".format(themometer.gettopic(), ftemp))
                 return tret
         # did not locate sensor to update
         return False
@@ -211,35 +177,13 @@ class home:
                 if humidity > 0:
                     tret = themometer.sethumidity(humidity)
 
-                #if tret:
-                #    loggerdo.log.debug("housemqtt - setting {} humidity to {} was sucessful".format(themometer.gettopic(), humidity))
-                #else:
-                #    loggerdo.log.debug(
-                #        "housemqtt - setting {} humidity to {} was NOT sucessful".format(themometer.gettopic(), humidity))
+                if not tret:
+                    loggerdo.log.debug(
+                        "housemqtt - setting {} humidity to {} was NOT sucessful".format(themometer.gettopic(), humidity))
+  
                 return tret
         # did not locate sensor to update
         return False
-
-
-    def updatesensor(self, topic, data):
-        for themometer in self.burrowsensors:
-            if themometer.gettopic() == topic:
-                # Becuase of the way posting data is written I must submit something for null values.
-                # Check to make sure submitted data is above 0
-                if data["temperature"] > 40:
-                    tret = themometer.settemp(data["temperature"], data["time"])
-                else:
-                    loggerdo.log.debug("housemqtt - house - data for {} is very bad - {}".format(themometer.gettopic(), data["temperature"]))
-                    tret = False
-
-                if data["humidity"] > 0:
-                    themometer.sethumidity(data["humidity"], data["time"])
-                    #loggerdo.log.debug(
-                    #    "housemqtt - house - setting {} humidity to {}".format(themometer.getnickname(), data["humidity"]))
-
-                return tret
-                # going to stop logging to mongo
-                # mongo.logtemp(self.mydb, themometer.getnickname(), data["temperature"], False, themometer.getweight(), data["humidity"])
 
     def getweighthouseavg(self):
         return self.getweightedavg(self.burrowsensors, zone=False)
@@ -262,10 +206,11 @@ class home:
         total = len(self.burrowsensors)
         fail = 0
         for sensor in self.burrowsensors:
-            if sensor.alertcount > 10:
+            if sensor.gettemp() is None:
                 fail +=1
+                loggerdo.log.info(f"housemqtt - house - Error in sensor {sensor.topic}")
         if fail > (total/2):
-            #loggerdo.log.debug(f'housemqtt - getsenseorhealth - to many offline sensors, {fail}')
+            loggerdo.log.info(f'housemqtt - getsenseorhealth - to many offline sensors, {fail}')
             return False
 
         else:
@@ -372,13 +317,6 @@ class home:
 
     def getinitialize(self):
         return self.initializecomplete
-
-    #def checkanyonehome(self):
-        # if self.pingfamily.anyonehome():
-    #    if self.pingfamily.anyonehome():
-    #        return True
-    #    else:
-    #        return False
 
     def getzones(self):
         zones = []
