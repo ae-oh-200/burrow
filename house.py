@@ -1,4 +1,3 @@
-import occupied
 import datetime
 from libraries import loggerdo
 from libraries import utils

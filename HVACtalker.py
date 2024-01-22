@@ -15,22 +15,15 @@ class hvactalk():
 	hvacbroker = None
 	syncerr = 0
 
-	def __init__(self, emalert):
+	def __init__(self):
 		self.hvacbroker = broker()
 		self.ac = False
 		self.heat = False
 		self.fan = False
 		self.host = '192.168.5.70'
-		self.emalert = emalert
 		self.syncerr = 0
 		# Run start
 		self.start()
-
-	def sendalert(self, system, message):
-		loggerdo.log.debug("HVACtalker - sending alert for - {}".format(system))
-		subject = "{} threw an error".format(system)
-		message = "{}\n current time is {}, we will keep trying".format(message, datetime.datetime.now())
-		self.emalert.shout(subject, message)
 
 
 	def ACon(self):
@@ -44,9 +37,9 @@ class hvactalk():
 				loggerdo.log.info("hvactalk - reply for ac on, returning true")
 				return True
 			else:
-				time.sleep(15)
+				time.sleep(1)
 
-		self.sendalert(system='ACon', message='HVACtalker - unable to turn AC on after 10 tries')
+		
 		loggerdo.log.info("hvactalk - did not receive reply for ac on, not updating. return False")
 
 		return False
@@ -61,8 +54,8 @@ class hvactalk():
 				loggerdo.log.info("hvactalk - reply for ac off, returning true")
 				return True
 			else:
-				time.sleep(15)
-		self.sendalert(system='ACoff', message='HVACtalker - unable to turn AC off after 10 tries')
+				time.sleep(1)
+
 		loggerdo.log.info("hvactalk - did not receive reply for ac off, not updating")
 		return False
 
@@ -76,8 +69,8 @@ class hvactalk():
 				loggerdo.log.info("hvactalk - reply for fan on, returning true")
 				return True
 			else:
-				time.sleep(15)
-		self.sendalert(system='FANon', message='HVACtalker - unable to turn FAN on after 10 tries')
+				time.sleep(1)
+		
 		loggerdo.log.info("hvactalk - did not receive reply for fan on, not updating. return False")
 
 		return False
@@ -91,8 +84,8 @@ class hvactalk():
 				loggerdo.log.info("hvactalk - reply for fan off, returning true")
 				return True
 			else:
-				time.sleep(15)
-		self.sendalert(system='FANoff', message='HVACtalker - unable to turn FAN off after 10 tries')
+				time.sleep(1)
+		
 		loggerdo.log.info("hvactalk - did not receive reply for ac off, not updating")
 		return False
 
@@ -105,8 +98,8 @@ class hvactalk():
 				loggerdo.log.info(f"hvactalk - reply for heat on, returning true. count - {counter}")
 				return True
 			else:
-				time.sleep(15)
-		self.sendalert(system='HEATon', message='HVACtalker - unable to turn HEAT on after 10 tries')
+				time.sleep(1)
+	
 		loggerdo.log.info("hvactalk - did not receive reply for heat off, not updating")
 		return False
 
@@ -119,13 +112,20 @@ class hvactalk():
 				loggerdo.log.info(f"hvactalk - reply for heat off, returning true. count - {counter}")
 				return True
 			else:
-				time.sleep(15)
-		self.sendalert(system='HEAToff', message='HVACtalker - unable to turn HEAT off after 10 tries')
+				time.sleep(1)
+		
 		loggerdo.log.info("hvactalk - did not receive reply for heat off, not updating")
 		return False
 
 
 	def start(self):
+		# Start by makeing sure everything is off.
+		publish.single(HEATset, payload=str(False), hostname=self.host, keepalive=60)
+		publish.single(COOLset, payload=str(False), hostname=self.host, keepalive=60)
+		publish.single(FANset, payload=str(False),  hostname=self.host, keepalive=60)
+		return True
+	
+	def stopAll(self):
 		# Start by makeing sure everything is off.
 		publish.single(HEATset, payload=str(False), hostname=self.host, keepalive=60)
 		publish.single(COOLset, payload=str(False), hostname=self.host, keepalive=60)
@@ -139,34 +139,22 @@ class hvactalk():
 
 		# check to see if a sync has happened in last 10 minutes
 		if self.hvacbroker.lastsync  < datetime.datetime.now() - datetime.timedelta(minutes=5):
+			loggerdo.log.info("hvactalk - lastsync shouldnt be more than 5 minutes old, HVAC talk fail")
 			self.syncerr +=1
-			loggerdo.log.debug("hvactalk - lastsync shouldnt be more than 5 minutes old, HVAC talk fail")
-			if (self.syncerr% 100) == 0:
-				self.sendalert(system='hvacsync', message='HVACtalker - unable to sync HVAC, err = {}. last sync {}'.format(self.syncerr, self.hvacbroker.lastsync))
-			elif self.syncerr == 1000:
-				#sync err at 1000, make sure we shut it down if its listening
-				self.start()
+			self.stopAll()	
 		else:
-			# reset syncerr
-			if self.syncerr > 1:
-				self.sendalert(system='hvacsync',
-				               message='HVACtalker - sync HVAC error cleared, count was = {}'.format(self.syncerr))
 			self.syncerr = 0
 
 		if self.hvacbroker.ac != self.ac:
-			loggerdo.log.debug("hvactalk - ac out of sync with mqtt")
-			loggerdo.log.debug("hvactalk - setting ac to {}".format(self.hvacbroker.ac))
+			loggerdo.log.info("hvactalk - ac out of sync with mqtt, setting ac to {}".format(self.hvacbroker.ac))
 			self.ac = self.hvacbroker.ac
 
 		if self.hvacbroker.heat != self.heat:
-			loggerdo.log.debug("hvactalk - heat out of sync with mqtt")
-			loggerdo.log.debug("hvactalk - setting heat to {}".format(self.hvacbroker.heat))
+			loggerdo.log.info("hvactalk - heat out of sync with mqtt, setting heat to {}".format(self.hvacbroker.heat))
 			self.heat = self.hvacbroker.heat
 
-
 		if self.hvacbroker.fan != self.fan:
-			loggerdo.log.debug("hvactalk - fan out of sync with mqtt")
-			loggerdo.log.debug("hvactalk - setting fan to {}".format(self.hvacbroker.fan))
+			loggerdo.log.info("hvactalk - fan out of sync with mqtt, setting fan to {}".format(self.hvacbroker.fan))
 			self.fan = self.hvacbroker.fan
 
 
@@ -208,16 +196,14 @@ class broker:
 
 	def on_connect(self, mqttc, obj, flags, rc):
 
-		loggerdo.log.debug("hvactalk - mqtt connected")
-
-		loggerdo.log.info("Connected with result code " + str(rc))
+		loggerdo.log.debug("Connected with result code " + str(rc))
 		loggerdo.log.debug("Connected to %s:%s" % (mqttc._host, mqttc._port))
 
-		# Pause for 30 seconds to prevent immediate reconnect
-		time.sleep(3)
+		# Pause for 2 seconds to prevent immediate reconnect
+		time.sleep(2)
 		self.mqttc.subscribe(self.topicarray)
 		self.mqttconnected = True
-		loggerdo.log.debug("hvactalk - MQTT - connect done")
+		loggerdo.log.info("hvactalk - MQTT - connect done")
 
 
 	def on_message(self, mqttc, obj, msg):
@@ -276,16 +262,15 @@ class broker:
 					self.lastsync = datetime.datetime.strptime(message, '%Y-%m-%d %H:%M:%S.%f')
 					loggerdo.log.debug(f"hvactalk - mqtt - update lastsync to {self.lastsync} off a message")
 				except:
-					loggerdo.log.debug('hvactalk - could not convert sync msg to datetime')
-					print('could not convert sync msg to datetime')
+					loggerdo.log.info('hvactalk - could not convert sync msg to datetime')
 
 
 	def on_disconnect(self, mqttc, obj, rc):
-		loggerdo.log.debug("hvactalk - MQTT - disconnected")
+		loggerdo.log.info("hvactalk - MQTT - disconnected")
 		self.mqttconnected = False
 
 		if rc != 0:
-			loggerdo.log.debug("hvactalk - MQTT - Unexpected disconnection.")
+			loggerdo.log.info("hvactalk - MQTT - Unexpected disconnection.")
 
 		while not self.mqttconnected:
 			try:

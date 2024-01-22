@@ -1,12 +1,11 @@
-import Burrow, schedule
+import controller
+import schedule
 import MQTTlistener
 import house
 from libraries import loggerdo, utils
 import datetime
 import time
-import control
 import threading
-import alerts
 import base64
 import meross
 
@@ -72,7 +71,7 @@ def main(importedconfig):
     burrow = Burrow.Burrow(ourhome, dayschedule, config, ealert)
 
   
-    mqttlistener = MQTTlistener.broker(mqttconfig=config["MQTT"], house=ourhome, burrow=burrow, schedule=dayschedule,
+    mqttlistener = MQTTlistener.broker(house=ourhome, burrow=burrow, schedule=dayschedule,
                                config=config)
     
     mqttthermometer = MQTTlistener.broker(mqttconfig=config["MQTT"], house=ourhome)

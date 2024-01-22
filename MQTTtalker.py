@@ -157,8 +157,11 @@ class broker:
 			elif system == "ac" and status is False:
 				loggerdo.log.debug("MQTTtalker - Publish off to homebridge mqttthing")
 				publish.single(self.topic_systemhb, payload="auto", hostname=self.host, keepalive=60)
-			elif system == "fan_only":
+			elif system == "fan" and status:
 				loggerdo.log.debug("MQTTtalker - Publish fan to homebridge mqttthing")
+				publish.single(self.topic_systemhb, payload="fan_only", hostname=self.host, keepalive=60)
+			elif system == "fan" and status is False:
+				loggerdo.log.debug("MQTTtalker - Publish fan auto to homebridge mqttthing")
 				publish.single(self.topic_systemhb, payload="auto", hostname=self.host, keepalive=60)
 			elif system == "off":
 				loggerdo.log.debug("MQTTtalker - Publish off to homebridge mqttthing")
