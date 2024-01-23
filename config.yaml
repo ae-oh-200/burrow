@@ -1,0 +1,218 @@
+graph: False
+test: False
+
+module: burrow
+mode: heat
+
+acip: 192.168.5.110
+localsensor: False
+
+flask: False
+outtemplimitf: 69
+
+mongoip: localhost
+heatbump: 1
+acdrop: 1
+tempdur: 2
+heaterip: 192.168.5.51
+moremode: 2
+moretime: 4
+
+quickchangeSwingTime: 4
+quickchangeSwing: 2
+
+timegone: 90
+
+controlRoot: burrow/HVAC
+
+MQTT:
+  used: True
+  heatbump: 71
+  graphwebpath: /usr/local/var/www
+  mqttserver: 192.168.5.70
+  brokerid: gobroker
+  filename: graph.png
+  topicroot: burrow
+  topiclist:
+    - burrow/system/target/set
+    - burrow/system/target/setf
+    - burrow/system/target/setlow
+    - burrow/system/target/sethigh
+    - burrow/system/set
+    - burrow/burrow/set
+  sensorlist:
+    - burrow/sensor/livingroom/c
+    - burrow/sensor/kitchen/c
+    - burrow/sensor/playroom/c
+    - burrow/sensor/bedroom/c
+    - burrow/sensor/boysroom/c
+    - burrow/sensor/bella/c
+    - burrow/sensor/livingroom/f
+    - burrow/sensor/kitchen/f
+    - burrow/sensor/playroom/f
+    - burrow/sensor/bedroom/f
+    - burrow/sensor/boysroom/f
+    - burrow/sensor/bella/f
+pin: 11
+debug:
+  house: true
+  schedule: true
+  controller: true
+  mqttlistener: true
+  hvactalker: true
+
+merossswitch:
+  1:
+    name: Coffee
+    ip: 192.168.60.52
+  2:
+    name: Twinkle
+    ip: 192.168.60.50
+#  3:
+#    name: ChristmasTree
+#    ip: 192.168.60.53
+
+family:
+  - 192.168.5.80
+  - 192.168.5.90
+  - 192.168.30.65
+
+rooms:
+  1:
+    address: A4:C1:38:19:47:E9
+    address-type: mac
+    temperatureavail: true
+    humilityavail: true
+    nickname: Kitchen
+    houseweight: 20
+    zone: 1
+    zoneweight: 50
+    topic: kitchen
+
+  2:
+    address: 192.168.5.52
+    address-type: ip
+    temperatureavail: true
+    humilityavail: false
+    nickname: Living Room
+    houseweight: 60
+    zone: 1
+    zoneweight: 50
+    topic: livingroom
+
+  3:
+    address: A4:C1:38:39:6C:DB
+    address-type: mac
+    temperatureavail: true
+    humilityavail: true
+    nickname: Play Room
+    houseweight: 0
+    zone: 2
+    zoneweight: 100
+    topic: playroom
+
+  4:
+    address: A4:C1:38:7A:4E:FB
+    address-type: mac
+    temperatureavail: true
+    humilityavail: true
+    nickname: Boys Room
+    houseweight: 10
+    zone: 3
+    zoneweight: 50
+    topic: boysroom
+
+  5:
+    address: A4:C1:38:39:6C:DB
+    address-type: mac
+    temperatureavail: true
+    humilityavail: true
+    nickname: Bedroom
+    houseweight: 10
+    reconnectable: False
+    zone: 3
+    zoneweight: 50
+    topic: bedroom
+
+
+openweatherappid: 'b1f6731df9e06111d47d7caa8b0caffb'
+openweatherzip: '12306,us'
+
+cool:
+  1:
+    name: morning
+    temp: 71
+    up: 1
+    down: 1
+    default: False
+    scheduled: True
+    start: 5
+    end : 7
+  2:
+    name: day
+    temp: 72
+    up: 1
+    down: 1
+    default: True
+    scheduled: False
+  3:
+    name: night
+    temp: 72
+    up: 1.5
+    down: 1.5
+    default: False
+    scheduled: True
+    start: 23
+    end: 5
+  4:
+    name: away
+    temp: 74
+    up: 1
+    down: 2
+    default: False
+    scheduled: False
+
+heat:
+  1:
+    name: morning
+    temp: 66
+    up: 2
+    down: 1
+    default: False
+    scheduled: True
+    start: 5
+    end: 7
+  2:
+    name: day
+    temp: 66
+    up: 1
+    down: 3
+    default: True
+    scheduled: False
+  3:
+    name: night
+    temp: 63
+    up: 2
+    down: 2
+    default: False
+    scheduled: True
+    start: 21
+    end: 5
+  4:
+    name: away
+    temp: 62
+    up: 2
+    down: 2
+    default: False
+    scheduled: False
+
+fans:
+  maxFanRuntime: 30
+  start: 100
+  end: 2359
+  acStartDelay: 30
+  heatStartDelay: 60
+  ontime: 20
+  fanStartDelay: 60
+  state: true
+  defaultFanRuntime: 15
