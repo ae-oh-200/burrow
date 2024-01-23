@@ -160,5 +160,5 @@ cython_debug/
 #.idea/
 secrets.py
 *.bak
-*.olds
+*.old
 .DS_Store
