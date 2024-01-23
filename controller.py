@@ -31,7 +31,6 @@ class Burrow:
         self.ourhome = home
         self.schedule = schedule
         # self.acconfig = config['windowac']
-        self.test = config["test"]
         self.mqttserver = config["MQTT"]["mqttserver"]
         self.mqtttalker = MQTTtalker.broker(config["MQTT"])
 
@@ -73,7 +72,7 @@ class Burrow:
         self.stateStatus = True
 
         # setup HVAC talker
-        self.hvac = HVACtalker.hvactalk()
+        self.hvac = HVACtalker.hvactalk(mqttserver=config["MQTT"]["mqttserver"], controlRoot=config["controlRoot"], debug= config["debug"]["hvactalker"])
 
         #
         self.moretime = config["moretime"]
@@ -315,6 +314,8 @@ class Burrow:
         # do all the normal checks
         #
         #
+         # sync cal to check if current mode is right mode. Away is a "force" mode so it wont be overwritten until that changes
+        self.schedule.syncModeToCalendar()
         base, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
         housetemp = self.ourhome.getweighthouseavg()
         # check hvac

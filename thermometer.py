@@ -67,14 +67,14 @@ class broker:
 	schedule = None
 
 
-	def __init__(self, mqttconfig, house, config):
+	def __init__(self, house, config):
 		self.mqttc = mqtt.Client()
 		self.mqttc.on_message = self.on_message
-
+		self.host = config["MQTT"]["mqttserver"]
 		self.house = house
-		self.mqttconfig = mqttconfig
-		self.mqttc.connect(self.mqttconfig["mqttserver"], 1883, 60)
-		self.mqttc.subscribe(maketopics(self.mqttconfig))
+
+		self.mqttc.connect(self.host, 1883, 60)
+		self.mqttc.subscribe(maketopics(config["MQTT"]))
 		#loggerdo.log.debug("mqttbroker - set up complete")
 
 
@@ -113,25 +113,18 @@ class broker:
 			loggerdo.log.debug("MQTTlistener-Sensor - {} is in celsius - ".format(device,msgval))
 			ftemp = utils.truncate((msgval * 1.8) + 32, 2)
 			self.house.udatesensortemp(device, ftemp)
-			publish.single(f"{'/'.join(msgsplit)}/parsed-F", payload=str(ftemp), hostname=self.mqttconfig["mqttserver"])
+			publish.single(f"{'/'.join(msgsplit)}/parsed-F", payload=str(ftemp), hostname=self.host)
 		elif msgsplit[3] == "f":
 			msgsplit.pop(-1)
 			loggerdo.log.debug("MQTTlistener-Sensor - {} is {} , in fahrenheit".format(device, msgval))
 			self.house.udatesensortemp(device, msgval)
-			publish.single(f"{'/'.join(msgsplit)}/parsed-F", payload=str(msgval), hostname=self.mqttconfig["mqttserver"])
+			publish.single(f"{'/'.join(msgsplit)}/parsed-F", payload=str(msgval), hostname=self.host)
 
 		elif msgsplit[3] == "h":
 			loggerdo.log.debug("MQTTlistener-Sensor - {} is {} , in humidity".format(device, msgval))
 			self.house.udatesensorhumidity(device, msgval)
 			
 
-
-if __name__ == "__main__":
-    temp = thermometer(local=False, zone = 1, ip='192.168.5.52', port='6969', weight=25)
-    print(temp.getremotetemp())
-    print(temp.getzone())
-    temp = thermometer(local=False, zone = 1, ip='192.168.5.52', port='6969', weight = 75)
-    print(temp.getremotetemp())
-    print(temp.getzone())
-    print(temp.gethumidity())
+	def run(self):
+		self.mqttc.loop_forever()
 

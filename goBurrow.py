@@ -1,6 +1,7 @@
 import controller
 import schedule
 import MQTTlistener
+import thermometer
 import house
 from libraries import loggerdo, utils
 import datetime
@@ -22,7 +23,7 @@ def run():
         # update
         dayschedule.checkvalid()
         # Run eval before updates
-        burrow.eval()
+        burrow.houseEval()
         time.sleep(3)
 
 
@@ -72,7 +73,7 @@ def main(importedconfig):
     mqttlistener = MQTTlistener.broker(house=ourhome, burrow=burrow, schedule=dayschedule,
                                config=config)
     
-    mqttthermometer = MQTTlistener.broker(mqttconfig=config["MQTT"], house=ourhome)
+    mqttthermometer = thermometer.broker(house=ourhome, config=config)
     #controlthread = threading.Thread(target=controlchanges)
     #controlthread.setDaemon(True)
     #controlthread.start()

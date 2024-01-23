@@ -25,7 +25,7 @@ class day:
     debug = None
     activemode = None
     isAway = False
-    modes = []
+
     cal = {}
     lastCalendarUpdate = None
 
@@ -43,19 +43,16 @@ class day:
 
 
         if config["mode"] == "heat":
-            self.mode = "heat"
             self.dayLayout = config["heat"]
-            self.modes = config["heat-modes"]
             self.moremode = config["moremode"]
         else:
-            self.modes = config["cool"]
+            self.dayLayout = config["cool"]
             # If its AC more mode shouold drop temp not bump it
-            self.mode = "cool"
             self.moremode = config["moremode"] * -1
 
         self.buildcal()
         # always sync
-        self.synccalmode()
+        self.syncModeToCalendar()
 
         self.createDay()
 
@@ -78,7 +75,9 @@ class day:
         
         #check for default, make sure there is only 1
         defaultCount = 0
+
         for section in self.dayLayout:
+            section = self.dayLayout[section]
             if section['default']:
                 defaultCount +=1
         if defaultCount > 1:
@@ -133,13 +132,14 @@ class day:
 
         self.dayarray.clear()
         for section in self.dayLayout:
+            
             # up/down at aded from base temp
-            high = self.modes[section]['temp'] + self.modes[section]['up']
-            low = self.modes[section]['temp'] - self.modes[section]['down']
+            high = self.dayLayout[section]['temp'] + self.dayLayout[section]['up']
+            low = self.dayLayout[section]['temp'] - self.dayLayout[section]['down']
             # create an array of daybit objects for every mode and every 30 minutes 
             x = 0
             while x < 24:
-                self.dayarray.append(daybits(mode=self.modes[section]['name'], hour=x, base=self.modes[section]['temp'], high=high, low=low))
+                self.dayarray.append(daybits(mode=self.dayLayout[section]['name'], hour=x, base=self.dayLayout[section]['temp'], high=high, low=low))
                 x += 0.5
 
 

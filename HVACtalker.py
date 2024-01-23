@@ -6,29 +6,36 @@ import datetime
 import paho.mqtt.client as mqtt
 
 
-COOLset = 'burrow/HVAC/COOL/set'
-HEATset = 'burrow/HVAC/HEAT/set'
-FANset = 'burrow/HVAC/FAN/set'
-
 class hvactalk():
 
 	hvacbroker = None
 	syncerr = 0
+	COOLset = '/COOL/set'
+	HEATset = '/HEAT/set'
+	FANset = '/FAN/set'
 
-	def __init__(self):
-		self.hvacbroker = broker()
+	def __init__(self, mqttserver, controlRoot, debug):
+		self.hvacbroker = broker(controlRoot=controlRoot, mqttserver=mqttserver)
+		self.debug = debug
+		if debug:
+			controlRoot = controlRoot+ '/test'
+		self.COCLset = controlRoot + '/COOL/set'
+		self.HEATset = controlRoot + '/HEAT/set'
+		self.FANset = controlRoot + '/FAN/set'
+		self.host = mqttserver
+		
 		self.ac = False
 		self.heat = False
 		self.fan = False
-		self.host = '192.168.5.70'
-		self.syncerr = 0
+
 		# Run start
 		self.start()
 
 
+
 	def ACon(self):
 		loggerdo.log.debug("hvactalk - Turning AC on, waiting for reply")
-		publish.single(COOLset, payload=str(True), hostname=self.host, keepalive=60)
+		publish.single(self.COOLset, payload=str(True), hostname=self.host, keepalive=60)
 
 		# check to see if response has come back yet.
 		for counter in range(10):
@@ -47,7 +54,7 @@ class hvactalk():
 	def ACoff(self):
 
 		loggerdo.log.debug("hvactalk - Turning AC off, waiting for reply")
-		publish.single(COOLset, payload=str(False), hostname=self.host, keepalive=60)
+		publish.single(self.COOLset, payload=str(False), hostname=self.host, keepalive=60)
 		for counter in range(10):
 			if self.hvacbroker.ac is False:
 				self.ac = False
@@ -61,7 +68,7 @@ class hvactalk():
 
 	def FANon(self):
 		loggerdo.log.debug("hvactalk - Turning FAN on, waiting for reply")
-		publish.single(FANset, payload=str(True), hostname=self.host, keepalive=60)
+		publish.single(self.FANset, payload=str(True), hostname=self.host, keepalive=60)
 		# check to see if response has come back yet.
 		for counter in range(10):
 			if self.hvacbroker.fan is True:
@@ -77,7 +84,7 @@ class hvactalk():
 
 	def FANoff(self):
 		loggerdo.log.debug("hvactalk - Turning FAN off, waiting for reply")
-		publish.single(FANset, payload=str(False), hostname=self.host, keepalive=60)
+		publish.single(self.FANset, payload=str(False), hostname=self.host, keepalive=60)
 		for counter in range(10):
 			if self.hvacbroker.fan is False:
 				self.fan = False
@@ -91,7 +98,7 @@ class hvactalk():
 
 	def HEATon(self):
 		loggerdo.log.debug("hvactalk - Turning HEAT on, waiting for reply")
-		publish.single(HEATset, payload=str(True), hostname=self.host, keepalive=60)
+		publish.single(self.HEATset, payload=str(True), hostname=self.host, keepalive=60)
 		for counter in range(10):
 			if self.hvacbroker.heat is True:
 				self.heat = True
@@ -105,7 +112,7 @@ class hvactalk():
 
 	def HEAToff(self):
 		loggerdo.log.debug("hvactalk - Turning HEAT off, waiting for reply")
-		publish.single(HEATset, payload=str(False), hostname=self.host, keepalive=60)
+		publish.single(self.HEATset, payload=str(False), hostname=self.host, keepalive=60)
 		for counter in range(10):
 			if self.hvacbroker.heat is False:
 				self.heat = False
@@ -120,16 +127,16 @@ class hvactalk():
 
 	def start(self):
 		# Start by makeing sure everything is off.
-		publish.single(HEATset, payload=str(False), hostname=self.host, keepalive=60)
-		publish.single(COOLset, payload=str(False), hostname=self.host, keepalive=60)
-		publish.single(FANset, payload=str(False),  hostname=self.host, keepalive=60)
+		publish.single(self.HEATset, payload=str(False), hostname=self.host, keepalive=60)
+		publish.single(self.COOLset, payload=str(False), hostname=self.host, keepalive=60)
+		publish.single(self.FANset, payload=str(False),  hostname=self.host, keepalive=60)
 		return True
 	
 	def stopAll(self):
 		# Start by makeing sure everything is off.
-		publish.single(HEATset, payload=str(False), hostname=self.host, keepalive=60)
-		publish.single(COOLset, payload=str(False), hostname=self.host, keepalive=60)
-		publish.single(FANset, payload=str(False),  hostname=self.host, keepalive=60)
+		publish.single(self.HEATset, payload=str(False), hostname=self.host, keepalive=60)
+		publish.single(self.COOLset, payload=str(False), hostname=self.host, keepalive=60)
+		publish.single(self.FANset, payload=str(False),  hostname=self.host, keepalive=60)
 		return True
 
 
@@ -173,8 +180,11 @@ class broker:
 
 	lastsync = None
 
-	def __init__(self):
-
+	def __init__(self, mqttserver, controlRoot):
+		self.COCLget = controlRoot + '/COOL/get'
+		self.HEATget = controlRoot + '/HEAT/get'
+		self.FANget = controlRoot + '/FAN/get'
+		self.SYNCget = controlRoot + '/HVAC/sync'
 		self.ac = False
 		self.heat = False
 		self.fan = False
@@ -183,13 +193,13 @@ class broker:
 		self.SetupTopicArray()
 
 		self.mqttc = mqtt.Client()
-		self.mqttserver = '192.168.5.70'
+		self.host = mqttserver
 
 		self.mqttc.on_message = self.on_message
 		self.mqttc.on_connect = self.on_connect
 		self.mqttc.on_disconnect = self.on_disconnect
 
-		self.mqttc.connect(self.mqttserver)
+		self.mqttc.connect(self.host)
 
 		self.mqttc.loop_start()
 
@@ -286,15 +296,12 @@ class broker:
 				time.sleep(30)
 
 
-
-
-
 	def SetupTopicArray(self):
 		# subscribe to these to get updtes
-		self.topiclist.update({'COOLset': 'burrow/HVAC/COOL/get'})
-		self.topiclist.update({'HEATset': 'burrow/HVAC/HEAT/get'})
-		self.topiclist.update({'FANset': 'burrow/HVAC/FAN/get'})
-		self.topiclist.update({'sync': 'burrow/HVAC/sync'})
+		self.topiclist.update({'COOLget': self.COCLget})
+		self.topiclist.update({'HEATget':self.HEATget})
+		self.topiclist.update({'FANget': self.FANget})
+		self.topiclist.update({'sync': self.SYNCget})
 		#self.topiclist.update({'drop': 'burrow/HVAC/dropped'})
 
 		for topic in self.topiclist:
