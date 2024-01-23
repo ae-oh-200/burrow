@@ -15,7 +15,7 @@ class hvactalk():
 	FANset = '/FAN/set'
 
 	def __init__(self, mqttserver, controlRoot, debug):
-		self.hvacbroker = broker(controlRoot=controlRoot, mqttserver=mqttserver)
+		self.hvacbroker = broker(controlRoot=controlRoot, mqttserver=mqttserver, debug=debug)
 		self.debug = debug
 		if debug:
 			controlRoot = controlRoot+ '/test'
@@ -180,16 +180,16 @@ class broker:
 
 	lastsync = None
 
-	def __init__(self, mqttserver, controlRoot):
+	def __init__(self, mqttserver, controlRoot, debug):
 		self.COCLget = controlRoot + '/COOL/get'
 		self.HEATget = controlRoot + '/HEAT/get'
 		self.FANget = controlRoot + '/FAN/get'
-		self.SYNCget = controlRoot + '/HVAC/sync'
+		self.SYNCget = controlRoot + '/sync'
 		self.ac = False
 		self.heat = False
 		self.fan = False
 		self.lastsync = datetime.datetime.now() - datetime.timedelta(minutes=1)
-
+		self.debug = debug
 		self.SetupTopicArray()
 
 		self.mqttc = mqtt.Client()
@@ -270,7 +270,8 @@ class broker:
 				# convert msg to datetime
 				try:
 					self.lastsync = datetime.datetime.strptime(message, '%Y-%m-%d %H:%M:%S.%f')
-					loggerdo.log.debug(f"hvactalk - mqtt - update lastsync to {self.lastsync} off a message")
+					if self.debug:
+						loggerdo.log.info(f"hvactalk - mqtt - update lastsync to {self.lastsync} off a message")
 				except:
 					loggerdo.log.info('hvactalk - could not convert sync msg to datetime')
 
@@ -305,6 +306,8 @@ class broker:
 		#self.topiclist.update({'drop': 'burrow/HVAC/dropped'})
 
 		for topic in self.topiclist:
+			if self.debug:
+				loggerdo.log.info(f"hvactalk - MQTT - subscribe to {topic,self.topiclist[topic]}")
 			self.topicarray.append((self.topiclist[topic], 0))
 
 	def run(self):

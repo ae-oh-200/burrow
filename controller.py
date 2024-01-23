@@ -207,6 +207,12 @@ class Burrow:
     def getburrowstatus(self):
         return self.stateStatus
     
+    def fanoffer(self):
+        if self.fanstate is True:
+            self.fanstate = False
+            self.fanStateLastChange = datetime.datetime.now()
+            self.hvac.FANoff()
+            self.publishburrowmessage()
 
     def turnonawayoverride(self):
         # self.schedule.changemode('away', True)

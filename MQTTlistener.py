@@ -215,12 +215,14 @@ class broker:
 				self.burrow.quickACchange(False)
 				if self.debug:
 					loggerdo.log.info("MQTTlistener - MQTT request to turn ac off complete.")
-
-
 			else:
-				loggerdo.log.info("WERID MESSAGE")
+				loggerdo.log.debug("MQTTlistener - MQTT request to turn something off, but nothing to do.")
 
-				#See if ac turns itse
+
+		else:
+			loggerdo.log.info(f"MQTTlistener - WERID MESSAGE, {message}")
+
+			#See if ac turns itse
 
 
 	def run(self):
