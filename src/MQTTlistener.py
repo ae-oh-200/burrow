@@ -150,7 +150,7 @@ class broker:
 	def systemSetMessage(self, message):
 		if message == "cool":
 
-			if self.burrow.ac is True:
+			if self.burrow.mode == "cool":
 				loggerdo.log.info("MQTTlistener - MQTT request, ac is off, turning ac on")
 				btemp, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
 				# drop temp with acdrop
@@ -163,7 +163,7 @@ class broker:
 
 		elif message == "heat":
 			# check if heat is off, and heater is "mode"
-			if self.burrow.heat is True:
+			if self.burrow.mode == "heat":
 				loggerdo.log.info("MQTTlistener - heat - heat message, turn heat on.")
 				if self.burrow.heaterstate:
 						loggerdo.log.info("MQTTlistener - heat - heater is on. didnt do anything.")
@@ -189,7 +189,7 @@ class broker:
 				self.burrow.fanoffer()
 		
 			# check for heat and needs to be off
-			elif self.burrow.heaterstate is True and self.burrow.heat is True:
+			elif self.burrow.heaterstate is True and self.burrow.mode == "heat":
 				if self.debug:
 					loggerdo.log.info('MQTTlistener - heat is on, turn heat off')
 				base, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
@@ -202,7 +202,7 @@ class broker:
 					loggerdo.log.info("MQTTlistener - MQTT request to turn heat off complete.")
 
 			#check if ac is and needs to be off
-			elif self.burrow.acstate is True and self.burrow.ac is True:
+			elif self.burrow.acstate is True and self.burrow.mode == "cool":
 				if self.debug:
 					loggerdo.log.info('MQTTlistener - AC is on, turn ac off')
 
