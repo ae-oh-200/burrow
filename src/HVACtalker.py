@@ -14,15 +14,19 @@ class hvactalk():
 	HEATset = '/HEAT/set'
 	FANset = '/FAN/set'
 
-	def __init__(self, mqttserver, controlRoot, debug):
-		self.hvacbroker = broker(controlRoot=controlRoot, mqttserver=mqttserver, debug=debug)
-		self.debug = debug
-		if debug:
-			controlRoot = controlRoot+ '/test'
-		self.COCLset = controlRoot + '/COOL/set'
-		self.HEATset = controlRoot + '/HEAT/set'
-		self.FANset = controlRoot + '/FAN/set'
-		self.host = mqttserver
+
+	def __init__(self, config):
+		
+		self.controlRoot = config["controlRoot"]
+		self.debug = config["debug"]["hvactalker"]
+		self.host = config["MQTT"]["mqttserver"]
+		self.hvacbroker = broker(controlRoot=self.controlRoot, mqttserver=self.host, debug=self.debug)
+		self.test = config["debug"]["test"]
+		if self.test:
+			self.controlRoot = self.controlRoot+ '/test'
+		self.COCLset = self.controlRoot + '/COOL/set'
+		self.HEATset = self.controlRoot + '/HEAT/set'
+		self.FANset = self.controlRoot + '/FAN/set'
 		
 		self.ac = False
 		self.heat = False

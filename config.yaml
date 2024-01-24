@@ -38,6 +38,8 @@ debug:
   controller: true
   mqttlistener: true
   hvactalker: false
+  mqtttalker: true
+  test: true
 
 merossswitch:
   1:

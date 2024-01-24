@@ -16,8 +16,9 @@ class broker:
 	topic_burrow = None
 	topic_systemhb = None
 
-	def __init__(self, mqttconfig):
-		self.host = mqttconfig["mqttserver"]
+	def __init__(self, config):
+		self.host = config["MQTT"]["mqttserver"]
+		self.debug = config["debug"]["mqtttalker"]
 		self.topic_targettemp = 'burrow/system/target/get'
 		self.topic_targettemphigh = 'burrow/system/target/high'
 		self.topic_targettemplow = 'burrow/system/target/low'
@@ -25,7 +26,7 @@ class broker:
 		self.topic_currenttempf = 'burrow/temperature/f'
 		self.topic_currenttempc = 'burrow/temperature/c'
 		self.topic_humidity = 'burrow/humidity'
-		self.topic_heater = 'burrow/system/heater/update'
+
 		self.topic_burrow = 'burrow/burrow/get'
 		self.topic_systemhb = 'burrow/system/get'
 		self.topic_zoneroot = 'burrow/zones'
@@ -50,30 +51,24 @@ class broker:
 		jsonmsg = json.dumps({"temp": tempc, "time": datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S")})
 		try:
 			publish.single(self.topic_currenttempc, payload=jsonmsg, hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishtemperaturec")
-		except OSError:
-			print("MQTTtalker - OSError in publishtemperaturec")
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishtemperaturec - error - ", e)
 
 	def publishtemperaturef(self, tempf):
 		# convert back to celsius
 		jsonmsg = json.dumps({"temp": tempf, "time": datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S")})
 		try:
 			publish.single(self.topic_currenttempf, payload=tempf, hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishtemperaturef")
-		except OSError:
-			print("MQTTtalker - OSError in publishtemperaturef")
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishtemperaturef - error - ", e)
 
 	def publishhumidity(self, humidity):
 		# publish humidity
 		jsonmsg = json.dumps({"humidity": humidity, "time": datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S")})
 		try:
 			publish.single(self.topic_humidity, payload=humidity, hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishhumidity")
-		except OSError:
-			print("MQTTtalker - OSError in publishhumidity")
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishhumidity - error - ", e)
 
 	def publishtarget(self, tempf):
 		# publish the current temp in celsius
@@ -82,20 +77,16 @@ class broker:
 		jsonmsg = json.dumps({"temp": tempc, "tempf": tempf, "time": datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S")})
 		try:
 			publish.single(self.topic_targettemp, payload=tempf, hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishtarget")
-		except OSError:
-			print("MQTTtalker - OSError in publishtarget")
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishtarget - error - ", e)
 
 	def publishhighlow(self, high, low):
 		# publish the current temp in celsius
 		try:
 			publish.single(self.topic_targettemplow, payload=low, hostname=self.host, keepalive=60)
 			publish.single(self.topic_targettemphigh, payload=high, hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishhighlow")
-		except OSError:
-			print("MQTTtalker - OSError in publishhighlow")
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishhighlow - error - ", e)
 
 	def publishburrow(self, state):
 		loggerdo.log.debug("MQTTtalker - update burrow, set to {}".format(state))
@@ -103,32 +94,9 @@ class broker:
 		#publish.single(self.topic_burrow, payload=jsonmsg, retain=True, hostname=self.host, keepalive=60)
 		try:
 			publish.single(self.topic_burrow, payload=state, hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishburrow")
-		except OSError:
-			print("MQTTtalker - OSError in publishburrow")
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishburrow - error - ", e)
 
-	def publishheateron(self):
-		loggerdo.log.debug("MQTTtalker - sending heat on to {}".format(self.topic_heater))
-		jsonmsg = json.dumps({"system": 'heater', "state": True, "time": datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S")})
-		loggerdo.log.debug("MQTTtalker - payload is {}".format(jsonmsg))
-		try:
-			publish.single(self.topic_heater, payload=jsonmsg, hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishheateron")
-		except OSError:
-			print("MQTTtalker - OSError in publishheateron")
-
-	def publishheateroff(self):
-		loggerdo.log.debug("MQTTtalker - sending heat off {}")
-		jsonmsg = json.dumps({"system": 'heater', "state": False, "time": datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S")})
-		loggerdo.log.debug("MQTTtalker - payload is {}".format(jsonmsg))
-		try:
-			publish.single(self.topic_heater, payload=jsonmsg, hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishheateroff")
-		except OSError:
-			print("MQTTtalker - OSError in publishheateroff")
 
 	def publishaczone(self, zone, zonename, state):
 		loggerdo.log.debug("MQTTtalker - sending zone update for {} with {}".format(zonename, state))
@@ -137,10 +105,8 @@ class broker:
 		topic = self.topic_zoneroot + '/' + str(zone)
 		try:
 			publish.single(topic, payload=jsonmsg, hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishaczone")
-		except OSError:
-			print("MQTTtalker - OSError in publishaczone")
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishaczone - error - ", e)
 
 	def publishsystem(self, system, status):
 		# this was when I inteded to allow the home app to switch from heat -> ac -> to off
@@ -166,54 +132,27 @@ class broker:
 			elif system == "off":
 				loggerdo.log.debug("MQTTtalker - Publish off to homebridge mqttthing")
 				publish.single(self.topic_systemhb, payload="off", hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishsystem")
-		except OSError:
-			print("MQTTtalker - OSError in publishsystem")
-
-	def resetsensor(self, ip):
-		port = 59000
-		utils.bouncesensor(ip, port)
-		time.sleep(15)
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishsystem - error - ", e)
 
 	def publishmode(self, mode):
 		loggerdo.log.debug("MQTTtalker - sending mode update, {}".format(mode))
 		try:
 			publish.single(self.topic_burrow_mode, payload=mode, hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishmode")
-		except OSError:
-			print("MQTTtalker - OSError in publishmode")
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishmode - error - ", e)
 
 	def publishday(self, day):
 		loggerdo.log.debug("MQTTtalker - sending day update, {}".format(day))
 		try:
 			publish.single(self.topic_day, payload=str(day), hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishday")
-		except OSError:
-			print("MQTTtalker - OSError in publishday")
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishday - error - ", e)
 
-	def publishmoremode(self, moremodebool):
-		try:
-			publish.single(self.topic_moremode, payload=str(moremodebool), hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishmoremode")
-		except OSError:
-			print("MQTTtalker - OSError in publishmoremode")
 
 	def publishaway(self, anyonehome):
 		try:
 			publish.single(self.topic_anyonehome, payload=str(anyonehome), hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishaway")
-		except OSError:
-			print("MQTTtalker - OSError in publishaway")
+		except Exception as e:
+			loggerdo.log.info("MQTTtalker - publishtemperaturec - error - ", e)
 
-	def publishtimer(self, state):
-		try:
-			publish.single(self.topic_timer_state, payload=str(state), hostname=self.host, keepalive=60)
-		except ConnectionRefusedError:
-			print("MQTTtalker - ConnectionRefusedError in publishtimer")
-		except OSError:
-			print("MQTTtalker - OSError in publishtimer")

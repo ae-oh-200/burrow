@@ -32,7 +32,7 @@ class Burrow:
         self.schedule = schedule
         # self.acconfig = config['windowac']
         self.mqttserver = config["MQTT"]["mqttserver"]
-        self.mqtttalker = MQTTtalker.broker(config["MQTT"])
+        self.mqtttalker = MQTTtalker.broker(config)
 
         # Setup Fan
         self.fanStartDelay = config['fans']['fanStartDelay']
@@ -51,16 +51,10 @@ class Burrow:
         self.fantimer = False
         self.fantimertime = (datetime.datetime.now() - datetime.timedelta(minutes=1))
 
-
         self.familyping = occupied.occupied(config)
         self.anyonehome = self.familyping.anyonehome()
 
         self.homeAwayOverride = False
-
-
-        self.syncstatecounter = 0
-
-
 
         # preset it all to false
         self.fanstate = False
@@ -72,7 +66,7 @@ class Burrow:
         self.stateStatus = True
 
         # setup HVAC talker
-        self.hvac = HVACtalker.hvactalk(mqttserver=config["MQTT"]["mqttserver"], controlRoot=config["controlRoot"], debug= config["debug"]["hvactalker"])
+        self.hvac = HVACtalker.hvactalk(config)
 
         
         # Start the setup
@@ -114,7 +108,7 @@ class Burrow:
             if self.hvac.heat != self.heaterstate:
                 loggerdo.log.info("burrow - error - hvac state out of sync with burrow, fixing - heat")
                 self.heaterstate = self.hvac.heat
-                self.self.heatStateLastChange = datetime.datetime.now()
+                self.heatStateLastChange = datetime.datetime.now()
 
         elif self.mode == "fan":
             loggerdo.log.debug("burrow - error - dont need to do anything for fan mode")
@@ -156,30 +150,35 @@ class Burrow:
         self.mqtttalker.publishday(self.schedule.gettoday())
 
         if self.anyonehome is False and self.homeAwayOverride is False:
-            loggerdo.log.debug(
-                "burrow - publishburrowmessage - publish away, status {}, anyonehome {}, override{}".format(status,
-                                                                                                            self.anyonehome,
-                                                                                                            self.homeAwayOverride))
+            if self.debug:
+                loggerdo.log.debug(
+                    "burrow - publishburrowmessage - publish away, status {}, anyonehome {}, override {}".format(status,
+                                                                                                                self.anyonehome,
+                                                                                                                self.homeAwayOverride))
             self.mqtttalker.publishburrow(state="Out")
 
         #fan is here because I need to tell HA if fan is on
         elif self.fanstate:
+            if self.debug:
+                loggerdo.log.info("burrow - publishburrowmessage - publish fanstate")
             self.mqtttalker.publishburrow(state="Fan")
 
         elif self.getburrowstatus() and (self.anyonehome or self.homeAwayOverride):
-            loggerdo.log.debug(
-                "burrow - publishburrowmessage - publish burrow is on, status {}, anyonehome {}, overridee{}, mode is {}".format(
-                    status, self.anyonehome, self.homeAwayOverride, self.schedule.getmode()))
+            if self.debug:
+                loggerdo.log.debug(
+                    "burrow - publishburrowmessage - publish burrow is on, status {}, anyonehome {}, override {}, mode is {}".format(
+                        status, self.anyonehome, self.homeAwayOverride, self.schedule.getmode()))
             self.mqtttalker.publishburrow(state="Home")
 
         elif status is False:
-            loggerdo.log.debug("burrow - publishburrowmessage - publish burrow off")
+            if self.debug:
+                loggerdo.log.info("burrow - publishburrowmessage - publish burrow off")
             self.mqtttalker.publishburrow(state="Off")
 
 
-
-        loggerdo.log.debug(
-            "burrow - publishburrowmessage - publish {} to {}.".format(self.mode, self.getCurrentState()))
+        if self.debug:
+            loggerdo.log.debug(
+                "burrow - publishburrowmessage - publish {} to {}.".format(self.mode, self.getCurrentState()))
         self.mqtttalker.publishsystem(self.mode, self.getCurrentState())
 
 
@@ -443,8 +442,7 @@ class Burrow:
                 if madechange:
                     self.fanstate = False
                     self.fanStateLastChange = datetime.datetime.now()
-                # leave function
-                return True
+
             
             elif self.fantimer is True and self.fanstate is False:
                 loggerdo.log.debug("burrow - fanrunner - fan timer running but fan off?")
@@ -490,5 +488,11 @@ class Burrow:
                 if madechange:
                     self.fanstate = False
                     self.fanStateLastChange = datetime.datetime.now()
-
+        # send updates
+        self.publishburrowmessage()
+        loggerdo.log.debug(f"burrow - fan is {self.fanstate}")
+        loggerdo.log.debug(f"burrow - heat is {self.heaterstate}")
+        loggerdo.log.debug(f"burrow - ac is {self.acstate}")
+        loggerdo.log.debug("burrow - burrow is enabled T/F {}".format(self.getburrowstatus()))
+        return madechange
 
