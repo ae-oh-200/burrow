@@ -68,7 +68,7 @@ class sensor:
         elif self.lasttempupdate > datetime.datetime.now() - datetime.timedelta(minutes=15):
             return self.temp
         else:
-            loggerdo.log.info("house - sensor -  Data from {} is to old to use, last update was - {}".format(self.topic, self.lasttempupdate))
+            loggerdo.log.debug("house - sensor -  Data from {} is to old to use, last update was - {}".format(self.topic, self.lasttempupdate))
             return None
 
     def gethumidity(self):
