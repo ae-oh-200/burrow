@@ -1,22 +1,5 @@
-graph: False
-test: False
-
 module: burrow
 mode: heat
-
-acip: 192.168.5.110
-localsensor: False
-
-flask: False
-outtemplimitf: 69
-
-mongoip: localhost
-heatbump: 1
-acdrop: 1
-tempdur: 2
-heaterip: 192.168.5.51
-moremode: 2
-moretime: 4
 
 quickchangeSwingTime: 4
 quickchangeSwing: 2
@@ -26,13 +9,7 @@ timegone: 90
 controlRoot: burrow/HVAC
 
 MQTT:
-  used: True
-  heatbump: 71
-  graphwebpath: /usr/local/var/www
   mqttserver: 192.168.5.70
-  brokerid: gobroker
-  filename: graph.png
-  topicroot: burrow
   topiclist:
     - burrow/system/target/set
     - burrow/system/target/setf
@@ -53,13 +30,14 @@ MQTT:
     - burrow/sensor/bedroom/f
     - burrow/sensor/boysroom/f
     - burrow/sensor/bella/f
-pin: 11
+
+
 debug:
-  house: true
+  house: false
   schedule: true
   controller: true
   mqttlistener: true
-  hvactalker: true
+  hvactalker: false
 
 merossswitch:
   1:
@@ -135,9 +113,6 @@ rooms:
     topic: bedroom
 
 
-openweatherappid: 'b1f6731df9e06111d47d7caa8b0caffb'
-openweatherzip: '12306,us'
-
 cool:
   1:
     name: morning
@@ -175,8 +150,8 @@ cool:
 heat:
   1:
     name: morning
-    temp: 66
-    up: 2
+    temp: 68
+    up: 0
     down: 1
     default: False
     scheduled: True
@@ -185,14 +160,14 @@ heat:
   2:
     name: day
     temp: 66
-    up: 1
+    up: 0
     down: 3
     default: True
     scheduled: False
   3:
     name: night
-    temp: 63
-    up: 2
+    temp: 64
+    up: 0
     down: 2
     default: False
     scheduled: True
@@ -201,7 +176,7 @@ heat:
   4:
     name: away
     temp: 62
-    up: 2
+    up: 0
     down: 2
     default: False
     scheduled: False

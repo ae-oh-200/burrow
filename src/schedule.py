@@ -44,11 +44,10 @@ class day:
 
         if config["mode"] == "heat":
             self.dayLayout = config["heat"]
-            self.moremode = config["moremode"]
+
         else:
             self.dayLayout = config["cool"]
-            # If its AC more mode shouold drop temp not bump it
-            self.moremode = config["moremode"] * -1
+
 
         self.buildcal()
         # always sync
@@ -59,9 +58,6 @@ class day:
         loggerdo.log.debug("schedule - day object setup complete.")
         self.fanstart = config["fans"]["start"]
         self.fanend = config["fans"]["end"]
-
-        self.moremodebool = False
-        #self.moremode = config["moremode"]
 
 
     # the cal is a dictonary, times to mode.
@@ -132,7 +128,6 @@ class day:
 
         self.dayarray.clear()
         for section in self.dayLayout:
-            
             # up/down at aded from base temp
             high = self.dayLayout[section]['temp'] + self.dayLayout[section]['up']
             low = self.dayLayout[section]['temp'] - self.dayLayout[section]['down']

@@ -74,8 +74,6 @@ class Burrow:
         # setup HVAC talker
         self.hvac = HVACtalker.hvactalk(mqttserver=config["MQTT"]["mqttserver"], controlRoot=config["controlRoot"], debug= config["debug"]["hvactalker"])
 
-        #
-        self.moretime = config["moretime"]
         
         # Start the setup
         self.setmode(config["mode"])
@@ -151,7 +149,6 @@ class Burrow:
         # send out al mqtt updates
         
         self.mqtttalker.publishaway(self.anyonehome)
-        self.mqtttalker.publishmoremode(self.schedule.moremodebool)
 
         loggerdo.log.debug("burrow - publish status of burrow itself - {}".format(status))
 

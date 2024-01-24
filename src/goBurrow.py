@@ -24,7 +24,7 @@ def run():
         dayschedule.checkvalid()
         # Run eval before updates
         burrow.houseEval()
-        time.sleep(3)
+        time.sleep(2)
 
 
 def runmqttlistenbroker():
@@ -54,14 +54,11 @@ def runmeross(switches, mqttserver):
         time.sleep(10)
 
 def main(importedconfig):
-    global config, test
+    global config
     global ourhome, dayschedule, burrow, mqttlistener, mqttthermometer
 
     config = importedconfig
 
-    test = config["test"]
-
-    myclient = None
 
     ourhome = house.home(config)
 
