@@ -170,7 +170,7 @@ class broker:
 						return
 				btemp, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
 
-				while self.house.getweighthouseavg() > schedlow:
+				while self.house.getweighthouseavg() < schedlow:
 					self.schedule.updatebasetemp(now=datetime.datetime.now(), temp=(btemp + 1), duration=self.quickchangeSwingTime)
 					btemp, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
 					if self.debug:
