@@ -170,7 +170,7 @@ class broker:
 						return
 				btemp, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
 
-				while self.house.getweighthouseavg() < schedlow:
+				while self.house.getweighthouseavg() <= schedlow:
 					self.schedule.updatebasetemp(now=datetime.datetime.now(), temp=(btemp + 1), duration=self.quickchangeSwingTime)
 					btemp, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
 					if self.debug:
@@ -193,10 +193,13 @@ class broker:
 				if self.debug:
 					loggerdo.log.info('MQTTlistener - heat is on, turn heat off')
 				base, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
+				# make sure that it doesnt turn back on right away
 
-				while self.house.getweighthouseavg() > schedlow:
+				while self.house.getweighthouseavg() >= schedhigh:
 					self.schedule.updatebasetemp(now=datetime.datetime.now(), temp=base-1,
 					                             duration=self.quickchangeSwingTime)
+					base, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
+
 				self.burrow.quickheaterchange(False)
 				if self.debug:
 					loggerdo.log.info("MQTTlistener - MQTT request to turn heat off complete.")
@@ -209,7 +212,7 @@ class broker:
 				base, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
 				
 				# First need to make sure we wont just turn back on
-				while self.house.getweighthouseavg() < schedhigh:
+				while self.house.getweighthouseavg() <= schedlow:
 					self.schedule.updatebasetemp(now=datetime.datetime.now(), temp=base+1,
 					                             duration=self.quickchangeSwingTime)
 				self.burrow.quickACchange(False)
