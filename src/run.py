@@ -27,10 +27,10 @@ def receivefile(config):
 if __name__ == "__main__":
     config = configload()
 
-    if sys.argv[-1] == "--heater" or config["module"] == "heater":
-        print("Heater mode")
-        from libraries import heater
-        heater.main()
+    if sys.argv[-1] == "--hvac" or config["module"] == "hvacr":
+        print("HVAC mode")
+        import HVAC
+        HVAC.run()
 
     elif sys.argv[-1] == "--bme" or config["module"] == "bme":
         print("bme mode")
