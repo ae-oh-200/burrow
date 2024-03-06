@@ -23,8 +23,8 @@ class broker:
 
 
     def __init__(self):
-        #self.mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-        self.mqttc = mqtt.Client()
+        self.mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        #self.mqttc = mqtt.Client()
 
         #self.debug = config["debug"]["mqttlistener"]
         self.mqttc.on_message = self.on_message
