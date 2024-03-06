@@ -47,10 +47,10 @@ class broker:
         removeList = []
         for obj in self.idLookup:
             
-            if "lastSeenMotion" in self.idLookup[obj]:
-                if self.motionActive < self.idLookup[obj]["lastSeenMotion"]:
-                    print(f'update motion active because of {obj}, {self.idLookup[obj]["className"]} {self.idLookup[obj]["zones"]}')
-                    self.motionActive =self.idLookup[obj]["lastSeenMotion"]
+            #if "lastSeenMotion" in self.idLookup[obj]:
+            #    if self.motionActive < self.idLookup[obj]["lastSeenMotion"]:
+            #        print(f'update motion active because of {obj}, {self.idLookup[obj]["className"]} {self.idLookup[obj]["zones"]}')
+            #        self.motionActive =self.idLookup[obj]["lastSeenMotion"]
                 
              # if no history updates in 30 mins, forget object
             if self.idLookup[obj]["lastSeen"] < (datetime.datetime.now() - datetime.timedelta(minutes=30)):
@@ -58,7 +58,7 @@ class broker:
 
         #clean up
         for thing in removeList:
-            print(f'remove {thing}')
+            #print(f'remove {thing}')
             del self.idLookup[thing]
 
         if self.motionActive > (datetime.datetime.now() - datetime.timedelta(minutes=1)):
@@ -100,7 +100,7 @@ class broker:
                                 objdict["count"] = objdict["count"] + 1
                                 objdict["lastSeen"] = datetime.datetime.fromtimestamp(trackedObject["history"]["lastSeen"]/1000)
                             else:
-                                print(f'found new {trackedObject["className"]} with id {trackedObject["id"]}. zones {trackedObject["zones"]}, box {trackedObject["boundingBox"]}. Its - {datetime.datetime.now()}')
+                                #print(f'found new {trackedObject["className"]} with id {trackedObject["id"]}. zones {trackedObject["zones"]}, box {trackedObject["boundingBox"]}. Its - {datetime.datetime.now()}')
                                 objdict["count"] = 1
                                 objdict["className"] = trackedObject["className"]
                                 objdict["firstSeen"] = datetime.datetime.fromtimestamp(trackedObject["history"]["firstSeen"]/1000)
@@ -118,7 +118,10 @@ class broker:
                                     if len(trackedObject["movement"])> 0:
                                         print(f'{objdict["className"]}, {trackedObject["id"]} moved from all to property because of movement')
                                     else:
-                                        print(f'{objdict["className"]}, {trackedObject["id"]} moved from all to property.s')
+                                        print(f'{objdict["className"]}, {trackedObject["id"]} moved from all to property.')
+                                        # turn on motion if something moved from all to property
+                                        if len(trackedObject["movement"])> 0:
+                                            self.motionActive = trackedObject["movement"]["lastSeen"]
                                     print(trackedObject)
                                 else:
                                     print(f'different zone change for {objdict["className"]} was {objdict["zones"]} is {trackedObject["zones"]}')
@@ -142,7 +145,12 @@ class broker:
 
                                     # this is a new object, so someone pulling into driveway?
                                     if historyFirstSeen > (datetime.datetime.now() - datetime.timedelta(minutes=5)):
-                                        print(f"property {trackedObject['className']} {trackedObject['id']}, with movement. first seen is greater than now - 5 mins {trackedObject['id']}. Was first seen {historyFirstSeen}")
+                                        #print(f"property {trackedObject['className']} {trackedObject['id']}, with movement. first seen is greater than now - 5 mins {trackedObject['id']}. Was first seen {historyFirstSeen}")
+                                        # turn on motion if new thing is found in property
+                                        if trackedObject["className"] == "person":
+                                            print(f"property PERSON {trackedObject['id']}, with movement. first seen is greater than now - 5 mins {trackedObject['id']}. Was first seen {historyFirstSeen}")
+                                        else:
+                                            print(f"property {trackedObject['className']} {trackedObject['id']}, with movement. first seen is greater than now - 5 mins {trackedObject['id']}. Was first seen {historyFirstSeen}")
                                     else:
                                         print(f"property {trackedObject['className']} {trackedObject['id']}, with movement. first seen is less than now - 5 mins {trackedObject['id']}. Was first seen {historyFirstSeen}")
                                    
