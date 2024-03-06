@@ -117,12 +117,11 @@ class broker:
                                 if "Property" in trackedObject["zones"] and "Property" not in objdict["zones"]:
                                     if len(trackedObject["movement"])> 0:
                                         print(f'{objdict["className"]}, {trackedObject["id"]} moved from all to property because of movement')
-                                    else:
-                                        print(f'{objdict["className"]}, {trackedObject["id"]} moved from all to property.')
                                         # turn on motion if something moved from all to property
-                                        if len(trackedObject["movement"])> 0:
-                                            self.motionActive = trackedObject["movement"]["lastSeen"]
-                                    print(trackedObject)
+                                        self.motionActive = trackedObject["movement"]["lastSeen"]
+                                    #else:
+                                    #    print(f'{objdict["className"]}, {trackedObject["id"]} moved from all to property.')
+                                        
                                 else:
                                     print(f'different zone change for {objdict["className"]} was {objdict["zones"]} is {trackedObject["zones"]}')
                                 # reset object zones
