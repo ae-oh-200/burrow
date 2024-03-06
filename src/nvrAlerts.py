@@ -118,7 +118,7 @@ class broker:
                                     if len(trackedObject["movement"])> 0:
                                         print(f'{objdict["className"]}, {trackedObject["id"]} moved from all to property because of movement')
                                         # turn on motion if something moved from all to property
-                                        self.motionActive = trackedObject["movement"]["lastSeen"]
+                                        self.motionActive = datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)
                                     #else:
                                     #    print(f'{objdict["className"]}, {trackedObject["id"]} moved from all to property.')
                                         
