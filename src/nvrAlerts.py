@@ -105,17 +105,17 @@ class broker:
                                 print(f'{datetime.datetime.now()} - {trackedObject["id"]} - new {trackedObject["className"]} in {trackedObject["zones"]}.')
 
                             # update zones
-                            if trackedObject["zones"] != objdict["zones"]:
+                            if trackedObject["zones"] != objdict["zone"]:
                                 # see if object moved from all to property
-                                if "Property" in trackedObject["zones"] and "Property" not in objdict["zones"]:
+                                if "Property" in trackedObject["zones"] and "Property" not in objdict["zone"]:
                                     print(f'{datetime.datetime.now()} - {objdict["className"]}/{trackedObject["id"]} - moved from all to property.')
                                     # turn on motion if something moved from all to property
                                     self.motionActive = datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)
                                 else:
                                     pass
-                                    print(f'{datetime.datetime.now()} - {objdict["className"]}/{trackedObject["id"]} - different zone change,  was {objdict["zones"]} is {trackedObject["zones"]}.')
+                                    print(f'{datetime.datetime.now()} - {objdict["className"]}/{trackedObject["id"]} - different zone change,  was {objdict["zone"]} is {trackedObject["zones"]}.')
                                 # reset object zones
-                                objdict["zones"] = trackedObject["zones"]
+                                objdict["zone"] = trackedObject["zones"]
 
 
                             #save objdict
