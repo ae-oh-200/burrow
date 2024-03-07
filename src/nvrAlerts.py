@@ -149,7 +149,8 @@ class broker:
                                         # turn on motion if new thing is found in property
                                         if trackedObject["className"] == "person":
                                             print(f"{datetime.datetime.now()} property PERSON {trackedObject['id']}, with movement. first seen is greater than now - 5 mins {trackedObject['id']}. Was first seen {historyFirstSeen}")
-                                            self.motionActive = datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)
+                                            if len(trackedObject["movement"])> 0:
+                                                self.motionActive = datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)
                                         else:
                                             print(f"{datetime.datetime.now()} property {trackedObject['className']} {trackedObject['id']}, with movement. first seen is greater than now - 5 mins {trackedObject['id']}. Was first seen {historyFirstSeen}")
                                     else:
