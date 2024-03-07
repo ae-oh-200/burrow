@@ -165,21 +165,6 @@ class broker:
 #(self.fanStateLastChange + datetime.timedelta(minutes=self.fanStartDelay) < datetime.datetime.now()) 
 if __name__ == "__main__":
     print('needs to be imported to run')
-    items = {}
-    items["times"] =[7]
-    items["times"].append(8)
-    print(items)
-    0/0
     runner = broker()
     runner.run()
-    idLookup = {}
-    idLookup.update({"72":1})
-    idLookup["34"] = 1
-    
-    
-    if "72" in idLookup:
-        idLookup["72"] = idLookup["72"] +1
-
-    print(idLookup)
-
 
