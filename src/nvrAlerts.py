@@ -122,7 +122,7 @@ class broker:
                             self.idLookup[trackedObject["id"]] = objdict
     
                             # property should be for someone coming home
-                            if "Property" in objdict["zones"]:
+                            if "Property" in objdict["zone"]:
  
                                     historyFirstSeen = datetime.datetime.fromtimestamp(trackedObject["history"]["firstSeen"]/1000)
 
