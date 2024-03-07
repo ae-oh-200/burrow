@@ -102,7 +102,7 @@ class broker:
                                 objdict["zoneLog"] = [trackedObject["zones"]]
                                 objdict["movement"] = [datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)]
                                 #log it
-                                print(f'{datetime.datetime.now()} - {trackedObject["id"]} - new {trackedObject["className"]} in {trackedObject["zones"]}.')
+                                print(f'{datetime.datetime.now()} - {objdict["className"]}/{trackedObject["id"]} - new in {trackedObject["zones"]}.')
 
                             # update zones
                             if trackedObject["zones"] != objdict["zone"]:
