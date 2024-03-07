@@ -32,9 +32,7 @@ class broker:
         self.mqttc.connect(server)
         self.mqttc.subscribe(maketopics())
         self.idLookup = {}
-        self.firstseenLoopup = {}
         self.scoreLookup = {}
-        self.isMoving = {}
         self.runcount = 0
         self.motionAlert = False
         self.motionActive = datetime.datetime.now() - datetime.timedelta(minutes=1)
@@ -46,12 +44,7 @@ class broker:
     def manageAlert(self):
         removeList = []
         for obj in self.idLookup:
-            
-            #if "lastSeenMotion" in self.idLookup[obj]:
-            #    if self.motionActive < self.idLookup[obj]["lastSeenMotion"]:
-            #        print(f'update motion active because of {obj}, {self.idLookup[obj]["className"]} {self.idLookup[obj]["zones"]}')
-            #        self.motionActive =self.idLookup[obj]["lastSeenMotion"]
-                
+              
              # if no history updates in 30 mins, forget object
             if self.idLookup[obj]["lastSeen"] < (datetime.datetime.now() - datetime.timedelta(minutes=30)):
                 removeList.append(obj)
@@ -74,9 +67,6 @@ class broker:
 
 
     def on_message(self, mqttc, obj, msg):
-        requiredScore = 0
-        device = msg.topic.split("/")
-        msgsplit = msg.topic.split("/")
         msgjson = json.loads(msg.payload.decode("utf-8"))
         #self.manageAlert()
         if isinstance(msgjson, dict):
@@ -92,47 +82,42 @@ class broker:
                                 print(trackedObject)
                             continue
 
-                        if "score" in trackedObject and "className" in trackedObject and "id" in trackedObject and "zones" in trackedObject:
+                        if "score" in trackedObject and "className" in trackedObject and "id" in trackedObject and "zones" in trackedObject and len(trackedObject["movement"])> 0:
                             
                             # tracking with id and firstseen
                             if trackedObject["id"] in self.idLookup:
                                 objdict = self.idLookup[trackedObject["id"]]
                                 objdict["count"] = objdict["count"] + 1
                                 objdict["lastSeen"] = datetime.datetime.fromtimestamp(trackedObject["history"]["lastSeen"]/1000)
+                                objdict["movement"].append(datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000))
+                                objdict["zoneLog"].append(trackedObject["zones"])
+                                
                             else:
                                 #print(f'found new {trackedObject["className"]} with id {trackedObject["id"]}. zones {trackedObject["zones"]}, box {trackedObject["boundingBox"]}. Its - {datetime.datetime.now()}')
                                 objdict["count"] = 1
                                 objdict["className"] = trackedObject["className"]
                                 objdict["firstSeen"] = datetime.datetime.fromtimestamp(trackedObject["history"]["firstSeen"]/1000)
                                 objdict["lastSeen"] = datetime.datetime.fromtimestamp(trackedObject["history"]["lastSeen"]/1000)
-                                objdict["zones"] = trackedObject["zones"]
-                                if len(trackedObject["movement"])> 0:
-                                    print(f'{datetime.datetime.now()} - {trackedObject["id"]} - new {trackedObject["className"]} has movement. In - {trackedObject["zones"]}')
+                                objdict["zone"] = trackedObject["zones"]
+                                objdict["zoneLog"] = [trackedObject["zones"]]
+                                objdict["movement"] = [datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)]
+                                #log it
+                                print(f'{datetime.datetime.now()} - {trackedObject["id"]} - new {trackedObject["className"]} in {trackedObject["zones"]}.')
 
                             # update zones
                             if trackedObject["zones"] != objdict["zones"]:
                                 # see if object moved from all to property
                                 if "Property" in trackedObject["zones"] and "Property" not in objdict["zones"]:
-                                    if len(trackedObject["movement"])> 0:
-                                        print(f'{datetime.datetime.now()} - {trackedObject["id"]} - {objdict["className"]} moved from all to property because of movement')
-                                        # turn on motion if something moved from all to property
-                                        self.motionActive = datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)
-                                    #else:
-                                        #print(f'{objdict["className"]}, {trackedObject["id"]} moved from all to property.')
-                                        
+                                    print(f'{datetime.datetime.now()} - {objdict["className"]}/{trackedObject["id"]} - moved from all to property.')
+                                    # turn on motion if something moved from all to property
+                                    self.motionActive = datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)
                                 else:
                                     pass
-                                    print(f'{datetime.datetime.now()} - {trackedObject["id"]} - different zone change for {objdict["className"]} was {objdict["zones"]} is {trackedObject["zones"]}')
+                                    print(f'{datetime.datetime.now()} - {objdict["className"]}/{trackedObject["id"]} - different zone change,  was {objdict["zones"]} is {trackedObject["zones"]}.')
                                 # reset object zones
                                 objdict["zones"] = trackedObject["zones"]
 
-                            # check for movement
-                            # if there is movement update lastSeen
-                            if len(trackedObject["movement"])> 0:
-                                objdict["lastSeenMotion"] = datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)
-                                objdict["movement"] = trackedObject["movement"]
-                                
-                            
+
                             #save objdict
                             self.idLookup[trackedObject["id"]] = objdict
     
@@ -143,18 +128,14 @@ class broker:
 
                                     # this is a new object, so someone pulling into driveway?
                                     if historyFirstSeen > (datetime.datetime.now() - datetime.timedelta(minutes=5)):
-                                        #print(f"property {trackedObject['className']} {trackedObject['id']}, with movement. first seen is greater than now - 5 mins {trackedObject['id']}. Was first seen {historyFirstSeen}")
                                         # turn on motion if new thing is found in property
+                                        print(f'{datetime.datetime.now()} - {objdict["className"]}/{trackedObject["id"]} - First seen was {historyFirstSeen} and is greater than now - 5 mins.')
+                                        #turn on motion for someone new on property
                                         if trackedObject["className"] == "person":
-                                            print(f'{datetime.datetime.now()} - {trackedObject["id"]} - property PERSON  with movement. first seen is greater than now - 5 mins. Was first seen {historyFirstSeen}')
-                                            if len(trackedObject["movement"])> 0:
-                                                self.motionActive = datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)
-                                        else:
-                                            print(f'{datetime.datetime.now()}  - {trackedObject["id"]} - property {trackedObject["className"]}, with movement. first seen is greater than now - 5 mins. Was first seen {historyFirstSeen}')
-                                    #else:
-                                       #print(f"{datetime.datetime.now()}  - {trackedObject["id"]} - property {trackedObject['className']}, with movement. first seen is less than now - 5 mins {trackedObject['id']}. Was first seen {historyFirstSeen}")
-                                   
-            
+                                            self.motionActive = datetime.datetime.fromtimestamp(trackedObject["movement"]["lastSeen"]/1000)
+                                    else:
+                                        print(f'{datetime.datetime.now()} - {objdict["className"]}/{trackedObject["id"]} - First seen was {historyFirstSeen} and is less than now - 5 mins.')
+     
 
 #print(msgjson["detections"])
     def mqttrunner(self):
@@ -184,6 +165,11 @@ class broker:
 #(self.fanStateLastChange + datetime.timedelta(minutes=self.fanStartDelay) < datetime.datetime.now()) 
 if __name__ == "__main__":
     print('needs to be imported to run')
+    items = {}
+    items["times"] =[7]
+    items["times"].append(8)
+    print(items)
+    0/0
     runner = broker()
     runner.run()
     idLookup = {}
