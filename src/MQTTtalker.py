@@ -117,10 +117,10 @@ class broker:
 			elif system == "heat" and not status:
 				loggerdo.log.debug("MQTTtalker - Publish off to homebridge mqttthing")
 				publish.single(self.topic_systemhb, payload="auto", hostname=self.host, keepalive=60)
-			elif system == "ac" and status:
+			elif system == "cool" and status:
 				loggerdo.log.debug("MQTTtalker - Publish ac on to homebridge mqttthing")
 				publish.single(self.topic_systemhb, payload="cool", hostname=self.host, keepalive=60)
-			elif system == "ac" and status is False:
+			elif system == "cool" and status is False:
 				loggerdo.log.debug("MQTTtalker - Publish off to homebridge mqttthing")
 				publish.single(self.topic_systemhb, payload="auto", hostname=self.host, keepalive=60)
 			elif system == "fan" and status:
