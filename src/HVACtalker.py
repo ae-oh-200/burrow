@@ -21,9 +21,6 @@ class hvactalk():
 		self.debug = config["debug"]["hvactalker"]
 		self.host = config["MQTT"]["mqttserver"]
 		self.hvacbroker = broker(controlRoot=self.controlRoot, mqttserver=self.host, debug=self.debug)
-		self.test = config["debug"]["test"]
-		if self.test:
-			self.controlRoot = self.controlRoot+ '/test'
 		self.COOLset = self.controlRoot + '/COOL/set'
 		self.HEATset = self.controlRoot + '/HEAT/set'
 		self.FANset = self.controlRoot + '/FAN/set'
