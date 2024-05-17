@@ -227,7 +227,7 @@ class Burrow:
             if madechange:
                 self.HEATlastOff = datetime.datetime.now()
                 self.heaterstate = False
-        loggerdo.log.info(f"burrow - quickheaterchange - return was suessfull? - {madechange}")
+        loggerdo.log.info(f"burrow - quickheaterchange - return was successful? - {madechange}")
         return madechange
 
     def quickACchange(self, state):
@@ -241,6 +241,7 @@ class Burrow:
             if madechange:
                 self.AClastOff = datetime.datetime.now()
                 self.acstate = False
+        loggerdo.log.info(f"burrow - quickACchange - return was successful? - {madechange}")
         return madechange
     
     def tunOnFan(self):
