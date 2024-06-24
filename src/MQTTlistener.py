@@ -110,42 +110,28 @@ class broker:
 
 	def burrowmessage(self, message):
 		#loggerdo.log.debug("MQTTlistener - burrowmessage - message for burrow is {}".format(message))
-
-		if message == "Home":
-			#loggerdo.log.debug("MQTTlistener - burrowmessage - Trying to set burrow to default (Home)")
-			# if burrow is on and someone is home
-			#if self.burrow.getburrowstatus() and self.burrow.anyonehome:
-				# Burrow is already on and someone is home
-				#loggerdo.log.debug("MQTTlistener - burrowmessage - do nothing burrow is on and someone home")
-			if self.burrow.getburrowstatus() is False:
-				if self.debug:
-					loggerdo.log.debug("MQTTlistener - burrowmessage - burrow was off, turning it on")
-				self.burrow.burrowstatus(True)
-			elif self.burrow.getburrowstatus() and self.burrow.anyonehome is False:
-				if self.debug:
-					loggerdo.log.info("MQTTlistener - burrowmessage - burrow is on but away is set. turning away off.")
-				self.burrow.turnonawayoverride()
+		message = message.lower()
+		if message == "home":
+			if self.schedule.getmode is "away":
+				self.schedule.setAway(False)
+				loggerdo.log.info("MQTTlistener - burrowmessage - Turning away mode off")
 			else:
-				if self.debug:
-					loggerdo.log.info("MQTTlistener - burrowmessage - Burrow home message received but cant do anything")
+				loggerdo.log.info("MQTTlistener - burrowmessage - away mode was not on")
 
-		elif message == "Out":
+		elif message == "out":
 			loggerdo.log.info("MQTTlistener - burrowmessage - Trying to set burrow to away, this isnt setup")
 
-		elif message == "More":
-			if self.debug:
-				loggerdo.log.info("MQTTlistener - burrowmessage - turn More mode on")
-			btemp, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
-			self.schedule.updatebasetemp(now=datetime.datetime.now(), temp=(btemp + self.quickchangeSwing), duration=self.quickchangeSwingTime)
+		elif message == "away":
+			loggerdo.log.info("MQTTlistener - burrowmessage - Trying to set burrow to away, this isnt setup")
+			self.schedule.setAway(True)
 
-		elif message == "Off":
-			if self.debug:
-				loggerdo.log.info("MQTTlistener - burrowmessage - Trying to turn burrow off (Off)")
-			self.burrow.burrowstatus(False)
 		elif message == "off":
 			if self.debug:
 				loggerdo.log.info("MQTTlistener - burrowmessage - Trying to turn burrow off (off)")
 			self.burrow.burrowstatus(False)
+		#catch all
+		else:
+			loggerdo.log.info("MQTTlistener - burrowmessage - was not able to understand input,", message)
 
 	def systemSetMessage(self, message):
 		if message == "cool":

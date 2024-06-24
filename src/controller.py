@@ -1,14 +1,12 @@
 import datetime
 from libraries import loggerdo
 import MQTTtalker
-from libraries import occupied
 import HVACtalker
 import time
 
 class Burrow:
     ourhome = None
     schedule = None
-    anyonehome = None
     mqtttalker = None
 
     state = True
@@ -50,11 +48,6 @@ class Burrow:
 
         self.fantimer = False
         self.fantimertime = (datetime.datetime.now() - datetime.timedelta(minutes=1))
-
-        self.familyping = occupied.occupied(config)
-        self.anyonehome = self.familyping.anyonehome()
-
-        self.homeAwayOverride = False
 
         # preset it all to false
         self.fanstate = False
@@ -140,45 +133,13 @@ class Burrow:
         self.mqtttalker.publishtarget(base)
         self.mqtttalker.publishhighlow(high=schedhigh, low=schedlow)
 
-        # send out al mqtt updates
-        
-        self.mqtttalker.publishaway(self.anyonehome)
 
         loggerdo.log.debug("burrow - publish status of burrow itself - {}".format(status))
-
-        self.mqtttalker.publishmode(self.schedule.getmode())
+        if self.mode == "off":
+            self.mqtttalker.publishmode("off")
+        else:
+            self.mqtttalker.publishmode(self.schedule.getmode())
         self.mqtttalker.publishday(self.schedule.gettoday())
-
-        if self.anyonehome is False and self.homeAwayOverride is False:
-            if self.debug:
-                loggerdo.log.debug(
-                    "burrow - publishburrowmessage - publish away, status {}, anyonehome {}, override {}".format(status,
-                                                                                                                self.anyonehome,
-                                                                                                                self.homeAwayOverride))
-            self.mqtttalker.publishburrow(state="Out")
-
-        #fan is here because I need to tell HA if fan is on
-        elif self.fanstate:
-            if self.debug:
-                loggerdo.log.info("burrow - publishburrowmessage - publish fanstate")
-            self.mqtttalker.publishburrow(state="Fan")
-
-        elif self.getburrowstatus() and (self.anyonehome or self.homeAwayOverride):
-            if self.debug:
-                loggerdo.log.debug(
-                    "burrow - publishburrowmessage - publish burrow is on, status {}, anyonehome {}, override {}, mode is {}".format(
-                        status, self.anyonehome, self.homeAwayOverride, self.schedule.getmode()))
-            self.mqtttalker.publishburrow(state="Home")
-
-        elif status is False:
-            if self.debug:
-                loggerdo.log.info("burrow - publishburrowmessage - publish burrow off")
-            self.mqtttalker.publishburrow(state="Off")
-
-
-        if self.debug:
-            loggerdo.log.debug(
-                "burrow - publishburrowmessage - publish {} to {}.".format(self.mode, self.getCurrentState()))
         self.mqtttalker.publishsystem(self.mode, self.getCurrentState())
 
 
@@ -189,6 +150,9 @@ class Burrow:
             return True
         elif self.heaterstate:
             loggerdo.log.debug("burrow - getCurrentState is True, because HEAT")
+            return True
+        elif self.fanstate:
+            loggerdo.log.debug("burrow - getCurrentState is True, because fanstate")
             return True
         else:
             loggerdo.log.debug("burrow - getCurrentState is False")
@@ -209,11 +173,6 @@ class Burrow:
             self.fanStateLastChange = datetime.datetime.now()
             self.hvac.FANoff()
             self.publishburrowmessage()
-
-    def turnonawayoverride(self):
-        # self.schedule.changemode('away', True)
-        # self.schedule.disableoveride()
-        self.homeAwayOverride = True
 
     def quickheaterchange(self, state):
         loggerdo.log.info(f"burrow - quickheaterchange - trying to set heat to  {state}")
@@ -261,48 +220,6 @@ class Burrow:
             else:
                 loggerdo.log.info("burrow - Wanted to run on fan but its on, fan should run until {}".format(self.fantimertime))
 
-
-    # Turns awaymode on in the schdule object
-    def awaymode(self):
-
-        # check if anyone is home?
-        # the return should be true if someone is home
-        checkforanyonehome = self.familyping.anyonehome()
-        # clear old override if someone is home now
-
-        if checkforanyonehome and self.homeAwayOverride:
-            loggerdo.log.info("burrow - someone is home now, turning off the awaymode override")
-            self.homeAwayOverride = False
-
-        # check if no one is home and the home override is on
-        if checkforanyonehome is False and self.homeAwayOverride is True:
-            # loggerdo.log.info("burrow - Away mode override on, dont allow away mode")
-            # self.schedule.changemode('away', True)
-            if self.schedule.getmode() == 'away':
-                loggerdo.log.info("burrow - Away mode override on, dont allow away mode. Turn off override")
-                self.schedule.setAway(False)
-
-        else:
-            if self.anyonehome != checkforanyonehome:
-                if self.debug:
-                    loggerdo.log.info("burrow - change detected in awaymode")
-
-                # if someone is home.
-                if checkforanyonehome:
-                    if self.anyonehome is False:
-                        loggerdo.log.info(
-                            "burrow - Turn off away mode someone is home (homeaway override not conisdered)")
-                    self.schedule.setAway(False)
-                    self.anyonehome = checkforanyonehome
-                    self.homeAwayOverride = False
-                else:
-                    # no one is home
-                    self.schedule.setAway(True)
-                    self.anyonehome = checkforanyonehome
-            else:
-                loggerdo.log.debug("burrow - no change deteced in awaymode")
-                # make sure override is off
-                self.homeAwayOverride = False
 
     def getScheduleTemps(self):
         housetemp = self.ourhome.getweighthouseavg()

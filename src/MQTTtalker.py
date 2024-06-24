@@ -88,7 +88,7 @@ class broker:
 		except Exception as e:
 			loggerdo.log.info("MQTTtalker - publishhighlow - error - ", e)
 
-	def publishburrow(self, state):
+	def NOPEpublishburrow(self, state):
 		loggerdo.log.debug("MQTTtalker - update burrow, set to {}".format(state))
 		#jsonmsg = json.dumps({"state": state, "time": datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S")})
 		#publish.single(self.topic_burrow, payload=jsonmsg, retain=True, hostname=self.host, keepalive=60)
@@ -134,6 +134,8 @@ class broker:
 				publish.single(self.topic_systemhb, payload="off", hostname=self.host, keepalive=60)
 		except Exception as e:
 			loggerdo.log.info("MQTTtalker - publishsystem - error - ", e)
+
+
 
 	def publishmode(self, mode):
 		loggerdo.log.debug("MQTTtalker - sending mode update, {}".format(mode))
