@@ -130,9 +130,12 @@ class broker:
 			if self.debug:
 				loggerdo.log.info("MQTTlistener - burrowmessage - Trying to turn burrow off".format(message))
 			self.burrow.setBurrowStatus(False)
+			return
 		#catch all
 		else:
 			loggerdo.log.info("MQTTlistener - burrowmessage - was not able to understand input,".format(message))
+		loggerdo.log.info("MQTTlistener - burrowmessage - turn Burrow back on")
+		self.burrow.setBurrowStatus(True)
 
 	def systemSetMessage(self, message):
 		if message == "cool":

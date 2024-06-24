@@ -140,7 +140,10 @@ class Burrow:
         else:
             self.mqtttalker.publishmode(self.schedule.getmode())
         self.mqtttalker.publishday(self.schedule.gettoday())
-        self.mqtttalker.publishsystem(self.mode, self.getCurrentState())
+        if status is False:
+            self.mqtttalker.publishsystem("off", True)
+        else:
+            self.mqtttalker.publishsystem(self.mode, self.getCurrentState())
 
 
     def getCurrentState(self):
@@ -161,10 +164,10 @@ class Burrow:
     def setBurrowStatus(self, status):
         if status:
             self.stateStatus = True
-            loggerdo.log.debug("burrow - setBurrowStatus is True. Turn Burrow on")
+            loggerdo.log.info("burrow - setBurrowStatus is True. Turn Burrow on")
         else:
             self.stateStatus = False
-            loggerdo.log.debug("burrow - setBurrowStatus is True. Turn Burrow off")
+            loggerdo.log.info("burrow - setBurrowStatus is True. Turn Burrow off")
     
     def getburrowstatus(self):
         return self.stateStatus
