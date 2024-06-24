@@ -76,7 +76,6 @@ class broker:
 			pass
 			loggerdo.log.debug('MQTTlistener-Sensor - Sensor - msg in (wrong)')
 		elif device[1] == "burrow":
-			loggerdo.log.info('MQTTlistener-burrow - burrow - '.format(device))
 			self.burrowmessage(message=msg.payload.decode("utf-8"))
 			
 		else:

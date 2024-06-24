@@ -162,7 +162,7 @@ class day:
             return self.activemode
 
     def setAway(self, toggle):
-        loggerdo.log.info("schedule - set away mode to - ",toggle)
+        loggerdo.log.info("schedule - set away mode to - ".format(toggle))
         if toggle:
             self.isAway = True
         else:

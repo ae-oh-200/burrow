@@ -135,7 +135,7 @@ class Burrow:
 
 
         loggerdo.log.debug("burrow - publish status of burrow itself - {}".format(status))
-        if self.mode == "off":
+        if self.mode == "off" or status is False:
             self.mqtttalker.publishmode("off")
         else:
             self.mqtttalker.publishmode(self.schedule.getmode())
@@ -161,8 +161,10 @@ class Burrow:
     def setBurrowStatus(self, status):
         if status:
             self.stateStatus = True
+            loggerdo.log.debug("burrow - setBurrowStatus is True. Turn Burrow on")
         else:
             self.stateStatus = False
+            loggerdo.log.debug("burrow - setBurrowStatus is True. Turn Burrow off")
     
     def getburrowstatus(self):
         return self.stateStatus
