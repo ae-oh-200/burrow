@@ -76,7 +76,9 @@ class broker:
 			pass
 			loggerdo.log.debug('MQTTlistener-Sensor - Sensor - msg in (wrong)')
 		elif device[1] == "burrow":
+			loggerdo.log.info('MQTTlistener-burrow - burrow - ', device)
 			self.burrowmessage(message=msg.payload.decode("utf-8"))
+			
 		else:
 			loggerdo.log.debug('MQTTlistener - Message in, string is {}'.format(device))
 			loggerdo.log.info('MQTTlistener-Sensor - msg in (wrong)')
@@ -114,24 +116,24 @@ class broker:
 		if message == "home" or message == "auto":
 			if self.schedule.getmode is "away":
 				self.schedule.setAway(False)
-				loggerdo.log.info("MQTTlistener - burrowmessage - Turning away mode off", message)
+				loggerdo.log.info("MQTTlistener - burrowmessage - Turning away mode off".format(message))
 			else:
-				loggerdo.log.info("MQTTlistener - burrowmessage - away mode was not on", message)
+				loggerdo.log.info("MQTTlistener - burrowmessage - away mode was not on".format(message))
 
 		elif message == "out":
-			loggerdo.log.info("MQTTlistener - burrowmessage - Trying to set burrow to away, this isnt setup", message)
+			loggerdo.log.info("MQTTlistener - burrowmessage - Trying to set burrow to away, this isnt setup".format(message))
 
 		elif message == "away":
-			loggerdo.log.info("MQTTlistener - burrowmessage - Trying to set burrow to away, this isnt setup", message)
+			loggerdo.log.info("MQTTlistener - burrowmessage - Trying to set burrow to away, this isnt setup".format(message))
 			self.schedule.setAway(True)
 
 		elif message == "off":
 			if self.debug:
-				loggerdo.log.info("MQTTlistener - burrowmessage - Trying to turn burrow off", message)
+				loggerdo.log.info("MQTTlistener - burrowmessage - Trying to turn burrow off".format(message))
 			self.burrow.setBurrowStatus(False)
 		#catch all
 		else:
-			loggerdo.log.info("MQTTlistener - burrowmessage - was not able to understand input,", message)
+			loggerdo.log.info("MQTTlistener - burrowmessage - was not able to understand input,".format(message))
 
 	def systemSetMessage(self, message):
 		if message == "cool":
