@@ -113,7 +113,7 @@ class broker:
 		loggerdo.log.info("MQTTlistener - burrowmessage - message for burrow is {}".format(message))
 		message = message.lower()
 		if message == "home" or message == "auto":
-			if self.schedule.getmode is "away":
+			if self.schedule.getmode == "away":
 				self.schedule.setAway(False)
 				loggerdo.log.info("MQTTlistener - burrowmessage - Turning away mode off".format(message))
 			else:
@@ -134,7 +134,7 @@ class broker:
 		#catch all
 		else:
 			loggerdo.log.info("MQTTlistener - burrowmessage - was not able to understand input,".format(message))
-		loggerdo.log.info("MQTTlistener - burrowmessage - turn Burrow back on")
+		
 		self.burrow.setBurrowStatus(True)
 
 	def systemSetMessage(self, message):
