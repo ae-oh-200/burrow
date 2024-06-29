@@ -152,7 +152,7 @@ class Burrow:
                 self.mqtttalker.publishsystem(self.mode, self.getCurrentState())
             else:
                 # if its not on check for fan
-                if self.fanstate():
+                if self.fanstate:
                     self.mqtttalker.publishsystem("fan", self.getCurrentState())
                 # if no fan its all off
                 else:
