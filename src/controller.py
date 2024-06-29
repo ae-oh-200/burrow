@@ -135,15 +135,28 @@ class Burrow:
 
 
         loggerdo.log.debug("burrow - publish status of burrow itself - {}".format(status))
+
         if self.mode == "off" or status is False:
             self.mqtttalker.publishmode("off")
         else:
             self.mqtttalker.publishmode(self.schedule.getmode())
         self.mqtttalker.publishday(self.schedule.gettoday())
+
         if status is False:
             self.mqtttalker.publishsystem("off", True)
         else:
-            self.mqtttalker.publishsystem(self.mode, self.getCurrentState())
+            # this is a little messy but i am foggy
+            # check if heat or ac is on
+            currentstate = self.getCurrentState()
+            if currentstate:
+                self.mqtttalker.publishsystem(self.mode, self.getCurrentState())
+            else:
+                # if its not on check for fan
+                if self.fanstate():
+                    self.mqtttalker.publishsystem("fan", self.getCurrentState())
+                # if no fan its all off
+                else:
+                    self.mqtttalker.publishsystem(self.mode, self.getCurrentState())
 
 
     def getCurrentState(self):
@@ -154,9 +167,9 @@ class Burrow:
         elif self.heaterstate:
             loggerdo.log.debug("burrow - getCurrentState is True, because HEAT")
             return True
-        elif self.fanstate:
-            loggerdo.log.debug("burrow - getCurrentState is True, because fanstate")
-            return True
+        #elif self.fanstate:
+        #    loggerdo.log.debug("burrow - getCurrentState is True, because fanstate")
+        #    return True
         else:
             loggerdo.log.debug("burrow - getCurrentState is False")
             return False
