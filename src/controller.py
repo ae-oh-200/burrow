@@ -373,11 +373,11 @@ class Burrow:
                     if self.debug:
                         loggerdo.log.info("burrow - Turn off fan timer, fan should have run until {}".format(self.fantimertime))
 
-                self.fantimer = False
-                madechange = self.hvac.FANoff()
-                if madechange:
-                    self.fanstate = False
-                    self.fanStateLastChange = datetime.datetime.now()
+                    self.fantimer = False
+                    madechange = self.hvac.FANoff()
+                    if madechange:
+                        self.fanstate = False
+                        self.fanStateLastChange = datetime.datetime.now()
 
             
             elif self.fantimer is True and self.fanstate is False:
