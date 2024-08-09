@@ -109,12 +109,12 @@ class sonarsensor:
 			else:
 				self.invalidcount += 1
 				self.state = "invalid"
-				loggerdo.log.debug(f'invalid distance - {self.name}, count - {self.invalidcount}')
+				loggerdo.log.info(f'invalid distance - {self.name}, count - {self.invalidcount}')
 
 		else:
 			self.errcount += 1
 			self.state = "error"
-			loggerdo.log.debug(f'inc error count on {self.name} to {self.errcount}')
+			loggerdo.log.info(f'inc error count on {self.name} to {self.errcount}')
 
 		self.publish(dist)
 
@@ -195,7 +195,7 @@ class door:
 				self.pos = 100
 
 		elif distfront:
-			loggerdo.log.debug('run with only dist 1')
+			loggerdo.log.info('run with only distfront')
 
 			if distfront > OPEN_DIST:
 				# garage is closed
@@ -207,7 +207,7 @@ class door:
 				self.pos = 100
 
 		elif distrear:
-			loggerdo.log.debug('run with only dist 2')
+			loggerdo.log.debug('run with only distrear')
 			if distrear > OPEN_DIST:
 				# garage is closed
 				sentmqtt(BASETOPIC + 'pos', 0, retain=False)
@@ -218,7 +218,7 @@ class door:
 				self.pos = 100
 
 		else:
-			loggerdo.log.debug('unable to calc pos because both sensors are not available')
+			loggerdo.log.info('unable to calc pos because both sensors are not available')
 			sentmqtt(BASETOPIC + 'pos', 'unable to calc pos because both sensors are not available', retain=False)
 
 	def close(self):
@@ -232,7 +232,7 @@ class door:
 		x = 0
 		while self.pos > 51:
 			if x < 3:
-				loggerdo.log.debug('close failed, retrying to open')
+				loggerdo.log.info('close failed, retrying to open')
 				activateopener()
 				loggerdo.log.debug(f'close delay is now {delay}')
 				time.sleep(delay)
@@ -262,7 +262,7 @@ class door:
 
 		x = 0
 		while self.pos == 0:
-			loggerdo.log.debug('open failed, retrying to open')
+			loggerdo.log.info('open failed, retrying to open')
 			if x < 3:
 				activateopener()
 				loggerdo.log.debug(f'open delay is now {delay},')
@@ -322,24 +322,24 @@ class broker:
 		# topic[2] should contain important
 		if topics[2] == "set":
 			if msg == '1':
-				print('open')
+				loggerdo.log.debug("GARAGE - MQTT - Garage Open")
 				self.garagedoor.open()
 			elif msg == "0":
-				print('close')
+				loggerdo.log.debug("GARAGE - MQTT - Garage Close")
 				self.garagedoor.close()
 
 		elif topics[2] == "sync":
-			print("HVAC - MQTT - sync message in")
+			loggerdo.log.debug("HVAC - MQTT - sync message in")
 			# convert msg to datetime
 			try:
 				msg = datetime.datetime.strptime(msg, '%Y-%m-%d %H:%M:%S.%f')
 				self.lastsync = msg
-				print('HVAC - MQTT - sync msg recevied and sync updated')
+				loggerdo.log.debug('HVAC - MQTT - sync msg recevied and sync updated')
 			except:
-				print('HVAC - MQTT - could not convert sync msg to datetime')
+				loggerdo.log.debug('HVAC - MQTT - could not convert sync msg to datetime')
 
 	def on_subscribe(self, mqttc, obj, mid, granted_qos):
-		print("Subscribed: " + str(mid) + " " + str(granted_qos))
+		loggerdo.log.debug("Subscribed: " + str(mid) + " " + str(granted_qos))
 
 	def on_connect(self, mqttc, obj, flags, rc):
 		loggerdo.log.info("MQTT - on_connect - Connected with result code " + str(rc))
@@ -348,7 +348,7 @@ class broker:
 		if rc == 0:
 			self.mqttconnected = True
 		else:
-			print("GARAGE - MQTT - on_connect - connect failed")
+			loggerdo.log.debug("GARAGE - MQTT - on_connect - connect failed")
 		# Pause for 30 seconds to prevent immediate reconnect
 		time.sleep(3)
 		self.mqttc.subscribe(self.topicarray)
@@ -360,9 +360,9 @@ class broker:
 		try:
 			sentmqtt(topiclist['sync'], datetime.datetime.now(), retain=False)
 		except ConnectionRefusedError:
-			print('GARAGE - MQTT - sendsync - Connection Refused error')
+			loggerdo.log.info('GARAGE - MQTT - sendsync - Connection Refused error')
 		except OSError as e:
-			print('GARAGE - MQTT - sendsync - OS Error, {}'.format(str(e)))
+			loggerdo.log.info('GARAGE - MQTT - sendsync - OS Error, {}'.format(str(e)))
 
 	def run(self):
 		self.mqttc.loop_forever()
@@ -372,9 +372,9 @@ def sentmqtt(topic, msg, retain=False):
 	try:
 		publish.single(topic, payload=str(msg), hostname=MQTTSERVER, retain=retain,keepalive=60)
 	except ConnectionRefusedError:
-		print('GARAGE - MQTT - sendsync - Connection Refused error')
+		loggerdo.log.info('GARAGE - MQTT - sendsync - Connection Refused error')
 	except OSError as e:
-		print('GARAGE - MQTT - sendsync - OS Error, {}'.format(str(e)))
+		loggerdo.log.info('GARAGE - MQTT - sendsync - OS Error, {}'.format(str(e)))
 
 def activateopener():
 	GPIO.output(ACTIVATE_OPENER, GPIO.HIGH)
@@ -392,7 +392,7 @@ def runmqttbroker(mqtt):
 
 
 def run():
-	print('loop starting')
+	loggerdo.log.debug('loop starting')
 	garagedoor = door()
 	mqttbroker = broker(garagedoor)
 
@@ -414,7 +414,7 @@ def run():
 		if lastsync < datetime.datetime.now() - datetime.timedelta(minutes=2):
 			mqttbroker.sendsync()
 		elif lastsync < datetime.datetime.now() - datetime.timedelta(minutes=5):
-			print("lastsync shouldnt be more than 6 minutes old, last sync - {}".format(
+			loggerdo.log.info("lastsync shouldnt be more than 6 minutes old, last sync - {}".format(
 				str(lastsync)))
 		garagedoor.CheckPosition()
 
