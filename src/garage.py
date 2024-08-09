@@ -76,7 +76,7 @@ class sonarsensor:
 			x+=1
 		# If we went over x, return None.
 		if x >= 5000:
-			print("aborted on echo 0 - ", self.name)
+			loggerdo.log.info(f"aborted read for {self.name}, x was over 5000 after pulse start")
 			return None
 		x = 0
 		while GPIO.input(self.echo_pin)==1 and x <= 5000:
@@ -84,7 +84,7 @@ class sonarsensor:
 			x+=1
 		# If we went over x, return None
 		if x >= 5000:
-			print("aborted on echo 1 - ", self.name)
+			loggerdo.log.info(f"aborted read for {self.name}, x was over 5000 after pulse end")
 			return None
 
 		pulse_duration = pulse_end_time - pulse_start_time
@@ -166,7 +166,7 @@ class door:
 		if distfront is None:
 			loggerdo.log.info('ERROR reading distfront')
 		else:
-			loggerdo.log.debug('distfront ', distfront)
+			loggerdo.log.debug(f'distfront {distfront}')
 
 		time.sleep(SONAR_READ_DELAY)
 
@@ -174,7 +174,8 @@ class door:
 		if distrear is None:
 			loggerdo.log.info('ERROR reading distrear')
 		else:
-			loggerdo.log.debug('distrear ', distrear)
+			loggerdo.log.debug(f'distrear {distrear}')
+
 
 		if distrear and distrear:
 
