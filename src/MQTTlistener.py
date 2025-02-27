@@ -161,12 +161,13 @@ class broker:
 						return
 				btemp, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
 
-				while self.house.getweighthouseavg() >= schedlow:
+				while self.house.getweighthouseavg() >= schedhigh:
 					self.schedule.updatebasetemp(now=datetime.datetime.now(), temp=(btemp + 1), duration=self.quickchangeSwingTime)
 					btemp, schedhigh, schedlow = self.schedule.pullhourdetails(datetime.datetime.now())
 					if self.debug:
 						loggerdo.log.info(f"MQTTlistener - new base temp is {btemp}")
-
+				self.burrow.quickheaterchange(True)
+				
 		elif message == "fan_only":
 			loggerdo.log.info("MQTTlistener - MQTT request to run on fan.")
 			if self.burrow.acstate is False and self.burrow.heaterstate is False:
